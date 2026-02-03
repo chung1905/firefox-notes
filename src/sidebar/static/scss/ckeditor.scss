@@ -8,7 +8,7 @@
   flex-grow: 1;
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  overflow: auto;
   position: relative;
 }
 
@@ -30,9 +30,9 @@
   height: auto;
 }
 
-.ck.ck-reset {
-  height: 100%;
-}
+//.ck.ck-reset {
+//  height: 100%;
+//}
 
 #notes {
   .ck-toolbar {
@@ -107,15 +107,15 @@
   }
 
   .ck-heading-dropdown button {
-    width: 43px;
+    //width: 43px;
     height: 25px;
-    padding: 2px 5px 2px 0px !important;
+    padding: 2px 5px 2px 0 !important;
   }
 
-  .ck-heading-dropdown .ck-dropdown__panel {
-    width: 170px;
-    height: 160px;
-  }
+  //.ck-heading-dropdown .ck-dropdown__panel {
+  //  width: 170px;
+  //  height: 160px;
+  //}
 
   .ck.ck-icon {
     width: 18px;
@@ -139,9 +139,9 @@
     margin: 1px;
   }
 
-  .ck-button__label {
-    max-width: 30px;
-  }
+  //.ck-button__label {
+  //  max-width: 30px;
+  //}
 
   .ck-balloon-panel {
     left: 0 !important;

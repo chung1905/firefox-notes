@@ -77,8 +77,8 @@ function localizeEditorButtons() {
     bold = document.querySelector('button.ck-button:nth-child(2)'),
     italic = document.querySelector('button.ck-button:nth-child(3)'),
     strike = document.querySelector('button.ck-button:nth-child(4)'),
-    bullet = document.querySelector('button.ck-button:nth-child(5)'),
-    ordered = document.querySelector('button.ck-button:nth-child(6)');
+    bullet = document.querySelector('button.ck-button:nth-child(5)');
+    // ordered = document.querySelector('button.ck-button:nth-child(6)');
 
   // Setting button titles in place of tooltips
   size.title = browser.i18n.getMessage('fontSizeTitle');
@@ -86,7 +86,7 @@ function localizeEditorButtons() {
   italic.title =
     browser.i18n.getMessage('italicTitle') + ' (' + userOSKey + '+I)';
   strike.title = browser.i18n.getMessage('strikethroughTitle');
-  ordered.title = browser.i18n.getMessage('numberedListTitle');
+  // ordered.title = browser.i18n.getMessage('numberedListTitle');
   bullet.title = browser.i18n.getMessage('bulletedListTitle');
 }
 
