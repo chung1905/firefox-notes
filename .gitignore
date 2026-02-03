@@ -10,3 +10,4 @@ ckeditor-build/build/*
 build/
 native/app/vendor/fxa-crypto-relier.js
 *.log
+.idea/
