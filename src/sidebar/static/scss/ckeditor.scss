@@ -34,14 +34,13 @@
   height: 100%;
 }
 
-
 #notes {
   .ck-toolbar {
     border: 0;
     border-radius: 0;
   }
 
-   .ck-editor__top {
+  .ck-editor__top {
     border-bottom: 1px solid #ccc;
     flex-direction: column;
     flex: 36px;
@@ -70,11 +69,13 @@
       font-size: 14px;
     }
 
-    ul, ol {
+    ul,
+    ol {
       padding-left: 20px;
     }
 
-    ul > li, ol > li {
+    ul > li,
+    ol > li {
       line-height: 1.5rem;
     }
 
@@ -152,7 +153,7 @@
 
 // CSS related to Notifications
 #sync-note {
-  background: #00FFFE; // green background is: #B6FEB4;
+  background: #00fffe; // green background is: #B6FEB4;
   width: 100%;
   position: relative;
   margin: 0 auto;
@@ -172,15 +173,11 @@
 
     &:hover {
       cursor: pointer;
-      opacity: 0.6
+      opacity: 0.6;
     }
     &:active {
       cursor: pointer;
-      opacity: 0.8
+      opacity: 0.8;
     }
   }
 }
-
-
-
-

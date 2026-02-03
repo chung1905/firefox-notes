@@ -14,10 +14,13 @@ import {
   PLEASE_LOGIN,
   FOCUS_NOTE,
   ERROR,
-  REQUEST_WELCOME_PAGE
+  REQUEST_WELCOME_PAGE,
 } from './utils/constants';
 
-import { getFirstLineFromContent, stripHtmlWithoutFirstLine } from './utils/utils';
+import {
+  getFirstLineFromContent,
+  stripHtmlWithoutFirstLine,
+} from './utils/utils';
 
 function sync(sync = {}, action) {
   switch (action.type) {
@@ -29,7 +32,7 @@ function sync(sync = {}, action) {
         email: action.email,
         lastSynced: new Date(),
         isSyncing: true,
-        error: null
+        error: null,
       });
     case DISCONNECTED:
       return Object.assign({}, sync, {
@@ -37,7 +40,7 @@ function sync(sync = {}, action) {
         isOpeningLogin: false,
         isPleaseLogin: false,
         isReconnectSync: false,
-        error: null
+        error: null,
       });
     case OPENING_LOGIN:
       return Object.assign({}, sync, {
@@ -50,7 +53,7 @@ function sync(sync = {}, action) {
         isOpeningLogin: false,
         isPleaseLogin: true,
         isReconnectSync: false,
-        error: null
+        error: null,
       });
     case RECONNECT_SYNC:
       return Object.assign({}, sync, {
@@ -58,54 +61,55 @@ function sync(sync = {}, action) {
         isOpeningLogin: false,
         isPleaseLogin: false,
         isReconnectSync: true,
-        error: null
+        error: null,
       });
     case DELETE_NOTE:
       return Object.assign({}, sync, {
         isSyncing: action.isSyncing,
-        focusedNoteId: sync.focusedNoteId === action.id ? null : sync.focusedNoteId,
-        error: null
+        focusedNoteId:
+          sync.focusedNoteId === action.id ? null : sync.focusedNoteId,
+        error: null,
       });
     case UPDATE_NOTE:
       return Object.assign({}, sync, {
         isSyncing: true,
-        error: null
+        error: null,
       });
     case TEXT_SAVED:
       return Object.assign({}, sync, {
-        isSyncing: sync.email ? sync.isSyncing : false
+        isSyncing: sync.email ? sync.isSyncing : false,
       });
     case TEXT_SYNCING:
       return Object.assign({}, sync, {
-        isSyncing: true
+        isSyncing: true,
       });
     case TEXT_SYNCED:
       return Object.assign({}, sync, {
         isSyncing: false,
-        lastSynced: new Date()
+        lastSynced: new Date(),
       });
     case KINTO_LOADED:
       return Object.assign({}, sync, {
         isSyncing: false,
-        lastSynced: new Date()
+        lastSynced: new Date(),
       });
     case FOCUS_NOTE:
       return Object.assign({}, sync, {
-        focusedNoteId: action.id
+        focusedNoteId: action.id,
       });
     // REQUEST_WELCOME_PAGE is triggered on start if redux has never been init.
     case REQUEST_WELCOME_PAGE:
       return Object.assign({}, sync, {
-        welcomePage: true
+        welcomePage: true,
       });
     case CREATE_NOTE:
       return Object.assign({}, sync, {
         welcomePage: false,
-        isSyncing: !action.isSyncing
+        isSyncing: !action.isSyncing,
       });
     case ERROR:
       return Object.assign({}, sync, {
-        error: action.message
+        error: action.message,
       });
     default:
       return sync;
@@ -116,7 +120,7 @@ function kinto(kinto = {}, action) {
   switch (action.type) {
     case KINTO_LOADED:
       return Object.assign({}, kinto, {
-        isLoaded: true
+        isLoaded: true,
       });
     default:
       return kinto;
@@ -132,7 +136,9 @@ function notes(notes = [], action) {
           note.firstLine = getFirstLineFromContent(note.content);
           note.secondLine = stripHtmlWithoutFirstLine(note.content);
           if (!(note.lastModified instanceof Date)) {
-            note.lastModified = note.lastModified ? new Date(note.lastModified) : new Date();
+            note.lastModified = note.lastModified
+              ? new Date(note.lastModified)
+              : new Date();
           }
         });
         return list;
@@ -140,7 +146,6 @@ function notes(notes = [], action) {
       return notes;
     }
     case TEXT_SYNCED: {
-
       if (!action.notes) return notes;
 
       const res = [];
@@ -151,7 +156,10 @@ function notes(notes = [], action) {
           content: note.content,
           firstLine: getFirstLineFromContent(note.content),
           secondLine: stripHtmlWithoutFirstLine(note.content),
-          lastModified: note.lastModified instanceof Date ? note.lastModified : new Date(note.lastModified)
+          lastModified:
+            note.lastModified instanceof Date
+              ? note.lastModified
+              : new Date(note.lastModified),
         });
       });
 
@@ -165,7 +173,7 @@ function notes(notes = [], action) {
         content: action.content,
         firstLine: getFirstLineFromContent(action.content),
         secondLine: stripHtmlWithoutFirstLine(action.content),
-        lastModified: action.lastModified || new Date()
+        lastModified: action.lastModified || new Date(),
       });
       return list;
     }
@@ -185,7 +193,7 @@ function notes(notes = [], action) {
           content: action.content,
           firstLine: getFirstLineFromContent(action.content),
           secondLine: stripHtmlWithoutFirstLine(action.content),
-          lastModified: new Date(action.lastModified)
+          lastModified: new Date(action.lastModified),
         });
       }
       return list;
@@ -198,7 +206,7 @@ function notes(notes = [], action) {
 const noteApp = combineReducers({
   sync,
   kinto,
-  notes
+  notes,
 });
 
 export default noteApp;

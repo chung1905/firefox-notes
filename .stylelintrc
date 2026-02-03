@@ -1,5 +1,5 @@
 {
-  "extends": "stylelint-config-recommended",
+  "extends": "stylelint-config-recommended-scss",
   "rules": {
     "no-descending-specificity": null,
     "shorthand-property-no-redundant-values": null

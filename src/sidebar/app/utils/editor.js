@@ -4,14 +4,14 @@
 // const TEXT_ALIGN_DIR = LANG_DIR === 'rtl' ? 'right' : 'left';
 
 function customizeEditor(editor) {
-  const mainEditor = document.querySelector(".ck-editor__main");
+  const mainEditor = document.querySelector('.ck-editor__main');
 
   // Disable right clicks
   // Refs: https://stackoverflow.com/a/737043/186202
   document
-    .querySelectorAll(".ck-toolbar, #footer-buttons, header")
-    .forEach(sel => {
-      sel.addEventListener("contextmenu", e => {
+    .querySelectorAll('.ck-toolbar, #footer-buttons, header')
+    .forEach((sel) => {
+      sel.addEventListener('contextmenu', (e) => {
         e.preventDefault();
       });
     });
@@ -19,34 +19,34 @@ function customizeEditor(editor) {
   // Fixes an issue with CKEditor and keeping multiple Firefox windows in sync
   // Ref: https://github.com/mozilla/notes/issues/424
   document
-    .querySelectorAll(".ck-heading-dropdown .ck-list__item")
-    .forEach(btn => {
-      btn.addEventListener("click", () => {
-        editor.fire("changesDone");
+    .querySelectorAll('.ck-heading-dropdown .ck-list__item')
+    .forEach((btn) => {
+      btn.addEventListener('click', () => {
+        editor.fire('changesDone');
       });
     });
 
-  document.addEventListener("dragover", () => {
-    mainEditor.classList.add("drag-n-drop-focus");
+  document.addEventListener('dragover', () => {
+    mainEditor.classList.add('drag-n-drop-focus');
   });
 
-  document.addEventListener("dragleave", () => {
-    mainEditor.classList.remove("drag-n-drop-focus");
+  document.addEventListener('dragleave', () => {
+    mainEditor.classList.remove('drag-n-drop-focus');
   });
 
-  document.addEventListener("drop", () => {
-    editor.fire("changesDone");
-    mainEditor.classList.remove("drag-n-drop-focus");
+  document.addEventListener('drop', () => {
+    editor.fire('changesDone');
+    mainEditor.classList.remove('drag-n-drop-focus');
     browser.runtime.sendMessage({
-      action: "metrics-drag-n-drop",
-      context: getPadStats(editor)
+      action: 'metrics-drag-n-drop',
+      context: getPadStats(editor),
     });
   });
 
   // prevent adding a '„' character and instead close the editor
   // when using the Notes keyboard shortcut within the editor
   // Refs: https://github.com/mozilla/notes/issues/780
-  editor.keystrokes.set("Alt+Shift+W", (data, cancel) => {
+  editor.keystrokes.set('Alt+Shift+W', (data, cancel) => {
     cancel();
     browser.sidebarAction.close();
   });
@@ -54,7 +54,7 @@ function customizeEditor(editor) {
   // "Ctrl/Cmd + s" keystroke is ignored when a note is focused - this prevents
   // the native "Save as" popup from appearing for the adjacent webpage.
   // Refs: https://github.com/mozilla/notes/issues/955
-  editor.keystrokes.set("Ctrl+S", (data, cancel) => {
+  editor.keystrokes.set('Ctrl+S', (data, cancel) => {
     cancel();
   });
 
@@ -63,31 +63,31 @@ function customizeEditor(editor) {
 
 function localizeEditorButtons() {
   // Clear CKEditor tooltips. Fixes: https://github.com/mozilla/notes/issues/410
-  document.querySelectorAll(".ck-toolbar .ck-tooltip__text").forEach(sel => {
+  document.querySelectorAll('.ck-toolbar .ck-tooltip__text').forEach((sel) => {
     sel.remove();
   });
 
   let userOSKey;
 
-  if (navigator.appVersion.indexOf("Mac") !== -1) userOSKey = "⌘";
-  else userOSKey = "Ctrl";
+  if (navigator.appVersion.indexOf('Mac') !== -1) userOSKey = '⌘';
+  else userOSKey = 'Ctrl';
 
-  const size = document.querySelector("button.ck-button:nth-child(1)"),
+  const size = document.querySelector('button.ck-button:nth-child(1)'),
     // Need to target buttons by index. Ref: https://github.com/ckeditor/ckeditor5-basic-styles/issues/59
-    bold = document.querySelector("button.ck-button:nth-child(2)"),
-    italic = document.querySelector("button.ck-button:nth-child(3)"),
-    strike = document.querySelector("button.ck-button:nth-child(4)"),
-    bullet = document.querySelector("button.ck-button:nth-child(5)"),
-    ordered = document.querySelector("button.ck-button:nth-child(6)");
+    bold = document.querySelector('button.ck-button:nth-child(2)'),
+    italic = document.querySelector('button.ck-button:nth-child(3)'),
+    strike = document.querySelector('button.ck-button:nth-child(4)'),
+    bullet = document.querySelector('button.ck-button:nth-child(5)'),
+    ordered = document.querySelector('button.ck-button:nth-child(6)');
 
   // Setting button titles in place of tooltips
-  size.title = browser.i18n.getMessage("fontSizeTitle");
-  bold.title = browser.i18n.getMessage("boldTitle") + " (" + userOSKey + "+B)";
+  size.title = browser.i18n.getMessage('fontSizeTitle');
+  bold.title = browser.i18n.getMessage('boldTitle') + ' (' + userOSKey + '+B)';
   italic.title =
-    browser.i18n.getMessage("italicTitle") + " (" + userOSKey + "+I)";
-  strike.title = browser.i18n.getMessage("strikethroughTitle");
-  ordered.title = browser.i18n.getMessage("numberedListTitle");
-  bullet.title = browser.i18n.getMessage("bulletedListTitle");
+    browser.i18n.getMessage('italicTitle') + ' (' + userOSKey + '+I)';
+  strike.title = browser.i18n.getMessage('strikethroughTitle');
+  ordered.title = browser.i18n.getMessage('numberedListTitle');
+  bullet.title = browser.i18n.getMessage('bulletedListTitle');
 }
 
 function getPadStats(editor) {
@@ -100,45 +100,45 @@ function getPadStats(editor) {
     strike: false,
     list: false,
     list_bulleted: false,
-    list_numbered: false
+    list_numbered: false,
   };
 
   // Create a range over the entire document to scan for styles
   const range = editor.model.createRangeIn(editor.model.document.getRoot());
   for (const value of range) {
-    if (value.type === "text") {
+    if (value.type === 'text') {
       const attrs = value.item.textNode
         ? value.item.textNode._attrs
         : value.item._attrs;
       // Bold
-      if (attrs && attrs.get("bold")) {
+      if (attrs && attrs.get('bold')) {
         styles.bold = true;
       }
       // Italic
-      if (attrs && attrs.get("italic")) {
+      if (attrs && attrs.get('italic')) {
         styles.italic = true;
       }
       // Strikethrough
-      if (attrs && attrs.get("strikethrough")) {
+      if (attrs && attrs.get('strikethrough')) {
         styles.strike = true;
       }
     }
 
-    if (value.type === "elementStart") {
+    if (value.type === 'elementStart') {
       // Size
-      if (value.item.name.indexOf("heading") === 0) {
+      if (value.item.name.indexOf('heading') === 0) {
         styles.size = true;
       }
 
       // List
-      if (value.item.name === "listItem") {
+      if (value.item.name === 'listItem') {
         styles.list = true;
         const listType = value.item._attrs
-          ? value.item._attrs.get("listType")
-          : value.item.getAttribute("listType");
-        if (listType === "bulleted") {
+          ? value.item._attrs.get('listType')
+          : value.item.getAttribute('listType');
+        if (listType === 'bulleted') {
           styles.list_bulleted = true;
-        } else if (listType === "numbered") {
+        } else if (listType === 'numbered') {
           styles.list_numbered = true;
         }
       }
@@ -153,7 +153,7 @@ function getPadStats(editor) {
     usesBold: styles.bold,
     usesItalics: styles.italic,
     usesStrikethrough: styles.strike,
-    usesList: styles.list
+    usesList: styles.list,
   };
 }
 

@@ -10,7 +10,6 @@ import Editor from './Editor';
 import { setFocusedNote } from '../actions';
 
 class EditorPanel extends React.Component {
-
   constructor(props) {
     super(props);
     this.props = props;
@@ -34,7 +33,9 @@ class EditorPanel extends React.Component {
 
   // This is triggered when redux update state.
   componentWillReceiveProps(nextProps) {
-    if (this.props.state.sync.focusedNoteId !== nextProps.state.sync.focusedNoteId) {
+    if (
+      this.props.state.sync.focusedNoteId !== nextProps.state.sync.focusedNoteId
+    ) {
       this.note = nextProps.state.notes.find((note) => {
         return note.id === nextProps.state.sync.focusedNoteId;
       });
@@ -52,23 +53,33 @@ class EditorPanel extends React.Component {
 
   render() {
     return [
-      <Header key="header" history={this.props.history} note={this.note} onNewNoteEvent={this.onNewNoteEvent} />,
-      <Editor key="editor" history={this.props.history} note={this.note} origin={this.origin} />
+      <Header
+        key="header"
+        history={this.props.history}
+        note={this.note}
+        onNewNoteEvent={this.onNewNoteEvent}
+      />,
+      <Editor
+        key="editor"
+        history={this.props.history}
+        note={this.note}
+        origin={this.origin}
+      />,
     ];
   }
 }
 
 function mapStateToProps(state) {
   return {
-    state
+    state,
   };
 }
 
 EditorPanel.propTypes = {
-    state: PropTypes.object.isRequired,
-    match: PropTypes.object.isRequired,
-    history: PropTypes.object.isRequired,
-    dispatch: PropTypes.func.isRequired
+  state: PropTypes.object.isRequired,
+  match: PropTypes.object.isRequired,
+  history: PropTypes.object.isRequired,
+  dispatch: PropTypes.func.isRequired,
 };
 
 export default connect(mapStateToProps)(EditorPanel);

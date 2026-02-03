@@ -6,12 +6,11 @@ env:
 parserOptions:
   ecmaFeatures:
     jsx: true
-  ecmaVersion: 2017
+  ecmaVersion: 2020
   sourceType: module
 
 extends:
   - eslint:recommended
-  - plugin:mozilla/recommended
   - plugin:react/recommended
   - plugin:jsx-a11y/recommended
 
@@ -43,9 +42,12 @@ globals:
   deleteNote: false
 
 plugins:
-  - mozilla
   - jsx-a11y
   - react
+
+settings:
+  react:
+    version: "16.2"
 
 root: true
 

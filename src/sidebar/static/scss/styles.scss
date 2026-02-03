@@ -8,7 +8,9 @@
   box-sizing: border-box;
 }
 
-*:active, *:focus, *:hover {
+*:active,
+*:focus,
+*:hover {
   outline: none;
 }
 
@@ -19,7 +21,7 @@ html {
   font: message-box, sans-serif;
   font-size: 13px;
   line-height: 17px;
-  letter-spacing: .1px;
+  letter-spacing: 0.1px;
   --sync-animation-duration: 0.4s;
 }
 
@@ -33,7 +35,8 @@ body > div {
   padding: 0;
 }
 
-html, body {
+html,
+body {
   // Override https://searchfox.org/mozilla-central/rev/76fe4bb385348d3f45bbebcf69ba8c7283dfcec7/browser/components/extensions/extension.css#16
   -moz-user-select: auto;
 }
@@ -63,7 +66,8 @@ a {
   user-select: none !important;
 }
 
-button, a.btn {
+button,
+a.btn {
   cursor: default;
   display: block;
   text-decoration: none;
@@ -132,5 +136,4 @@ button, a.btn {
       width: 16px;
     }
   }
-
 }

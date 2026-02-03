@@ -9,8 +9,8 @@ const styles = {
   container: {
     flex: '100%',
     display: 'flex',
-    flexDirection: 'column'
-  }
+    flexDirection: 'column',
+  },
 };
 
 class Router extends React.Component {

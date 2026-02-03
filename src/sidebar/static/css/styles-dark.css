@@ -23,7 +23,7 @@ body {
 }
 
 .animateSyncIcon #enable-sync svg path,
-.syncingLayout>div:hover #enable-sync svg path {
+.syncingLayout > div:hover #enable-sync svg path {
   fill: #4e92dd;
 }
 
@@ -39,12 +39,16 @@ footer button {
   background: none !important;
   color: #e6e6e6 !important;
 }
-footer button svg path { fill: #e6e6e6 !important; }
+footer button svg path {
+  fill: #e6e6e6 !important;
+}
 footer.warning button.fullWidth {
   background-color: rgb(255, 236, 173);
   color: black !important;
 }
-footer.warning button svg path { fill: black !important; }
+footer.warning button svg path {
+  fill: black !important;
+}
 
 .photon-menu > button svg path {
   fill: #e6e6e6 !important;
@@ -107,7 +111,8 @@ footer.warning button svg path { fill: black !important; }
   background: var(--main-bg-color);
 }
 
-#notes .ck-toolbar *, #notes .ck-toolbar {
+#notes .ck-toolbar *,
+#notes .ck-toolbar {
   color: #e6e6e6;
   background: var(--main-bg-color);
 }
@@ -178,9 +183,13 @@ footer.warning button svg path { fill: black !important; }
 }
 
 .listView ul li button p,
-.listView ul li button p span { color: var(--secondary-font-color); }
+.listView ul li button p span {
+  color: var(--secondary-font-color);
+}
 
-.listView ul li button p strong { color: var(--primary-font-color); }
+.listView ul li button p strong {
+  color: var(--primary-font-color);
+}
 
 header,
 footer,
@@ -190,29 +199,43 @@ footer,
   border-color: var(--border-color);
 }
 
-footer { background: none !important; }
+footer {
+  background: none !important;
+}
 
 header button.iconBtn svg path,
 footer button.iconBtn svg path {
   fill: var(--primary-font-color) !important;
 }
 
-.btn.fullWidth.borderBottom svg path { fill: var(--primary-font-color); }
+.btn.fullWidth.borderBottom svg path {
+  fill: var(--primary-font-color);
+}
 
 .btn.fullWidth.borderBottom:hover,
-footer#footer-buttons button.fullWidth:hover { background: var(--main-bg-hover-color) !important; }
+footer#footer-buttons button.fullWidth:hover {
+  background: var(--main-bg-hover-color) !important;
+}
 
 .btn.fullWidth.borderBottom:focus,
-footer#footer-buttons:not(.warning) button.fullWidth:focus { background: var(--main-bg-focus-color) !important; }
+footer#footer-buttons:not(.warning) button.fullWidth:focus {
+  background: var(--main-bg-focus-color) !important;
+}
 
 .btn.fullWidth.borderBottom:active,
-footer#footer-buttons button.fullWidth:active { background: var(--main-bg-active-color) !important; }
+footer#footer-buttons button.fullWidth:active {
+  background: var(--main-bg-active-color) !important;
+}
 
 /* Change syncing footer text to secondary color during and post syncing  */
 footer#footer-buttons.animateSyncIcon div.btnWrapper,
-footer#footer-buttons div.btnWrapper p { color: var(--secondary-font-color); }
+footer#footer-buttons div.btnWrapper p {
+  color: var(--secondary-font-color);
+}
 /* Change syncing footer icon color to blue when syncing */
-footer#footer-buttons.animateSyncIcon button#enable-sync svg path { fill: var(--secondary-font-color) !important; }
+footer#footer-buttons.animateSyncIcon button#enable-sync svg path {
+  fill: var(--secondary-font-color) !important;
+}
 
 footer#footer-buttons.warning {
   background-color: rgb(255, 236, 173) !important;
@@ -224,6 +247,12 @@ footer#footer-buttons.warning button.fullWidth:active {
   background: none !important;
 }
 
-button.iconBtn:hover { background: rgba(12, 12, 13, 0.1) !important; }
-button.iconBtn:focus { background: none !important; }
-button.iconBtn:active { background: rgba(12, 12, 13, 0.2) !important; }
+button.iconBtn:hover {
+  background: rgba(12, 12, 13, 0.1) !important;
+}
+button.iconBtn:focus {
+  background: none !important;
+}
+button.iconBtn:active {
+  background: rgba(12, 12, 13, 0.2) !important;
+}

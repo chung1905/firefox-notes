@@ -22,7 +22,7 @@ function getThemeFromStorage() {
 }
 document.addEventListener('DOMContentLoaded', getThemeFromStorage);
 
-chrome.runtime.onMessage.addListener(eventData => {
+chrome.runtime.onMessage.addListener((eventData) => {
   switch (eventData.action) {
     case 'theme-changed':
       getThemeFromStorage();

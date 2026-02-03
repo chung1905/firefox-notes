@@ -12,8 +12,8 @@ const styles = {
   container: {
     flex: '100%',
     display: 'flex',
-    flexDirection: 'column'
-  }
+    flexDirection: 'column',
+  },
 };
 
 class Editor extends React.Component {
@@ -26,7 +26,7 @@ class Editor extends React.Component {
 
     this.sendToNoteListener = (eventData) => {
       if (eventData.action === SEND_TO_NOTES) {
-        browser.windows.getCurrent({populate: true}).then((windowInfo) => {
+        browser.windows.getCurrent({ populate: true }).then((windowInfo) => {
           if (windowInfo.id === eventData.windowId) {
             let content = this.editor.getData();
             if (content === '<p>&nbsp;</p>') content = '';
@@ -38,9 +38,8 @@ class Editor extends React.Component {
   }
 
   componentDidMount() {
-
     ClassicEditor.create(this.node, INITIAL_CONFIG)
-      .then(editor => {
+      .then((editor) => {
         this.editor = editor;
 
         chrome.runtime.onMessage.addListener(this.sendToNoteListener);
@@ -54,53 +53,67 @@ class Editor extends React.Component {
           // Cache update event in case of multi-change event (copy pasting trigger many).
           clearTimeout(this.delayUpdateNote);
           this.delayUpdateNote = setTimeout(() => {
-
             const isFocused = document
               .querySelector('.ck-editor__editable')
               .classList.contains('ck-focused');
             // Only use the focused editor or handle 'rename' events to set the data into storage.
-            if (isFocused || name === 'rename' || name === 'insert' || name.type && name.type === 'transparent') {
-                const content = editor.getData();
+            if (
+              isFocused ||
+              name === 'rename' ||
+              name === 'insert' ||
+              (name.type && name.type === 'transparent')
+            ) {
+              const content = editor.getData();
 
-                if (!this.ignoreChange) {
-                  if (content !== '' && content !== '<p>&nbsp;</p>') {
-                    if (!this.props.note.id) {
-                      this.props.dispatch(createNote(content, this.props.origin)).then(id => {
+              if (!this.ignoreChange) {
+                if (content !== '' && content !== '<p>&nbsp;</p>') {
+                  if (!this.props.note.id) {
+                    this.props
+                      .dispatch(createNote(content, this.props.origin))
+                      .then((id) => {
                         this.props.dispatch(setFocusedNote(id));
                       });
-                    } else {
-                      this.props.dispatch(updateNote(this.props.note.id, content));
-                    }
                   } else {
-                    if (this.props.note.id) {
-                      this.props.dispatch(deleteNote(this.props.note.id, FROM_BLANK_NOTE));
-                    }
+                    this.props.dispatch(
+                      updateNote(this.props.note.id, content),
+                    );
+                  }
+                } else {
+                  if (this.props.note.id) {
+                    this.props.dispatch(
+                      deleteNote(this.props.note.id, FROM_BLANK_NOTE),
+                    );
                   }
                 }
-                this.ignoreChange = false;
+              }
+              this.ignoreChange = false;
 
-                chrome.runtime.sendMessage({
-                  action: 'metrics-changed',
-                  context: getPadStats(editor)
-                });
+              chrome.runtime.sendMessage({
+                action: 'metrics-changed',
+                context: getPadStats(editor),
+              });
             }
             this.delayUpdateNote = null;
           }, 50);
         });
       })
-      .catch(error => {
+      .catch((error) => {
         console.error(error); // eslint-disable-line no-console
       });
   }
 
   // This is triggered when redux update state.
   componentWillReceiveProps(nextProps) {
-    if (this.editor && this.props.note &&
-        this.editor.getData() !== nextProps.note.content) {
+    if (
+      this.editor &&
+      this.props.note &&
+      this.editor.getData() !== nextProps.note.content
+    ) {
       if (nextProps.note.id !== this.props.note.id) {
         this.ignoreChange = true;
       }
-      if (!this.delayUpdateNote) { // If no delay waiting, we apply modification
+      if (!this.delayUpdateNote) {
+        // If no delay waiting, we apply modification
         this.ignoreChange = true;
         this.editor.setData(nextProps.note.content || '<p></p>');
         this.editor.editing.view.focus();
@@ -122,13 +135,14 @@ class Editor extends React.Component {
         <div className="editorWrapper">
           <div
             id="editor"
-            ref={node => {
+            ref={(node) => {
               this.node = node;
             }}
-            dangerouslySetInnerHTML={{ __html: this.props.note ? this.props.note.content : '' }}>
-          </div>
+            dangerouslySetInnerHTML={{
+              __html: this.props.note ? this.props.note.content : '',
+            }}
+          ></div>
         </div>
-
       </div>
     );
   }
@@ -142,16 +156,16 @@ class Editor extends React.Component {
 
 function mapStateToProps(state) {
   return {
-    state
+    state,
   };
 }
 
 Editor.propTypes = {
-    state: PropTypes.object.isRequired,
-    history: PropTypes.object.isRequired,
-    origin: PropTypes.string.isRequired,
-    note: PropTypes.object,
-    dispatch: PropTypes.func.isRequired
+  state: PropTypes.object.isRequired,
+  history: PropTypes.object.isRequired,
+  origin: PropTypes.string.isRequired,
+  note: PropTypes.object,
+  dispatch: PropTypes.func.isRequired,
 };
 
 export default connect(mapStateToProps)(Editor);

@@ -12,8 +12,8 @@ function FeedbackIcon(props) {
     >
       <defs>
         <style>
-          .cls-1{'{'}fill:none;stroke:#333;stroke-miterlimit:10{'}'}{' '}
-          .cls-2{'{'}fill:#333{'}'}
+          .cls-1{'{'}fill:none;stroke:#333;stroke-miterlimit:10{'}'} .cls-2{'{'}
+          fill:#333{'}'}
         </style>
       </defs>
       <path

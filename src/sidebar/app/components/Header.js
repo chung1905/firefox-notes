@@ -27,7 +27,9 @@ class Header extends React.Component {
       if (this.menu && this.menu.classList.contains('close')) {
         this.menu.classList.replace('close', 'open');
         setTimeout(() => {
-          window.addEventListener('click', this.onCloseListener, { once: true });
+          window.addEventListener('click', this.onCloseListener, {
+            once: true,
+          });
           window.addEventListener('keydown', this.handleKeyPress);
         }, 10);
         this.indexFocusedButton = null; // index of focused button in this.buttons
@@ -44,7 +46,8 @@ class Header extends React.Component {
           if (this.indexFocusedButton === null) {
             this.indexFocusedButton = this.buttons.length - 1;
           } else {
-            this.indexFocusedButton = (this.indexFocusedButton - 1) % this.buttons.length;
+            this.indexFocusedButton =
+              (this.indexFocusedButton - 1) % this.buttons.length;
             if (this.indexFocusedButton < 0) {
               this.indexFocusedButton = this.buttons.length - 1;
             }
@@ -55,7 +58,8 @@ class Header extends React.Component {
           if (this.indexFocusedButton === null) {
             this.indexFocusedButton = 0;
           } else {
-            this.indexFocusedButton = (this.indexFocusedButton + 1) % this.buttons.length;
+            this.indexFocusedButton =
+              (this.indexFocusedButton + 1) % this.buttons.length;
           }
           this.buttons[this.indexFocusedButton].focus();
           break;
@@ -67,16 +71,17 @@ class Header extends React.Component {
       }
     };
 
-    this.exportAsHTML = () => props.dispatch(exportHTML(this.props.note.content));
+    this.exportAsHTML = () =>
+      props.dispatch(exportHTML(this.props.note.content));
 
     this.giveFeedbackCallback = (e) => {
       e.preventDefault();
       chrome.runtime.sendMessage({
-        action: 'metrics-give-feedback'
+        action: 'metrics-give-feedback',
       });
       browser.runtime.getBrowserInfo().then((info) => {
         browser.tabs.create({
-          url: `${SURVEY_PATH}&ver=${browser.runtime.getManifest().version}&release=${info.version}`
+          url: `${SURVEY_PATH}&ver=${browser.runtime.getManifest().version}&release=${info.version}`,
         });
       });
     };
@@ -88,66 +93,76 @@ class Header extends React.Component {
   }
 
   render() {
-
     // List of menu used for keyboard navigation
     this.buttons = [];
-    const hasContent = !!this.props.note.content && this.props.note.content.length > 0;
+    const hasContent =
+      !!this.props.note.content && this.props.note.content.length > 0;
 
     return (
-      <header ref={headerbuttons => this.headerbuttons = headerbuttons}>
+      <header ref={(headerbuttons) => (this.headerbuttons = headerbuttons)}>
         <button
           onClick={() => this.props.history.push('/')}
-          title={ browser.i18n.getMessage('backToAllNotes') }
-          className="btn iconBtn">
+          title={browser.i18n.getMessage('backToAllNotes')}
+          className="btn iconBtn"
+        >
           <ArrowLeftIcon />
         </button>
-        { this.props.note ?
-        <p>{ this.props.note.firstLine || browser.i18n.getMessage('newNote') }</p> :
-        '' }
-        <div className="photon-menu close bottom left" ref={menu => this.menu = menu }>
-          <button
-            className="iconBtn"
-            onClick={(e) => this.toggleMenu(e)}>
+        {this.props.note ? (
+          <p>
+            {this.props.note.firstLine || browser.i18n.getMessage('newNote')}
+          </p>
+        ) : (
+          ''
+        )}
+        <div
+          className="photon-menu close bottom left"
+          ref={(menu) => (this.menu = menu)}
+        >
+          <button className="iconBtn" onClick={(e) => this.toggleMenu(e)}>
             <MoreIcon />
           </button>
           <div className="wrapper">
-            <ul role="menu" >
+            <ul role="menu">
               <li>
                 <button
                   role="menuitem"
-                  ref={btn => btn ? this.buttons.push(btn) : null }
-                  title={ browser.i18n.getMessage('newNote') }
-                  onClick={ () => this.props.onNewNoteEvent() }>
-                  { browser.i18n.getMessage('newNote') }
+                  ref={(btn) => (btn ? this.buttons.push(btn) : null)}
+                  title={browser.i18n.getMessage('newNote')}
+                  onClick={() => this.props.onNewNoteEvent()}
+                >
+                  {browser.i18n.getMessage('newNote')}
                 </button>
               </li>
-              <hr/>
+              <hr />
               <li>
                 <button
                   role="menuitem"
                   disabled={!hasContent}
-                  ref={ btn => btn ? this.buttons.push(btn) : null }
-                  title={ browser.i18n.getMessage('exportAsHTML') }
-                  onClick={ this.exportAsHTML }>
-                  { browser.i18n.getMessage('exportAsHTML') }
+                  ref={(btn) => (btn ? this.buttons.push(btn) : null)}
+                  title={browser.i18n.getMessage('exportAsHTML')}
+                  onClick={this.exportAsHTML}
+                >
+                  {browser.i18n.getMessage('exportAsHTML')}
                 </button>
               </li>
               <li>
                 <button
                   role="menuitem"
-                  ref={btn => btn ? this.buttons.push(btn) : null }
-                  title={ browser.i18n.getMessage('deleteNote') }
-                  onClick={ this.onDelete }>
-                  { browser.i18n.getMessage('deleteNote') }
+                  ref={(btn) => (btn ? this.buttons.push(btn) : null)}
+                  title={browser.i18n.getMessage('deleteNote')}
+                  onClick={this.onDelete}
+                >
+                  {browser.i18n.getMessage('deleteNote')}
                 </button>
               </li>
               <li>
                 <button
                   role="menuitem"
-                  ref={btn => btn ? this.buttons.push(btn) : null }
-                  title={ browser.i18n.getMessage('feedback') }
-                  onClick={ this.giveFeedbackCallback }>
-                  { browser.i18n.getMessage('feedback') }
+                  ref={(btn) => (btn ? this.buttons.push(btn) : null)}
+                  title={browser.i18n.getMessage('feedback')}
+                  onClick={this.giveFeedbackCallback}
+                >
+                  {browser.i18n.getMessage('feedback')}
                 </button>
               </li>
             </ul>
@@ -160,16 +175,16 @@ class Header extends React.Component {
 
 function mapStateToProps(state) {
   return {
-    state
+    state,
   };
 }
 
 Header.propTypes = {
-    state: PropTypes.object.isRequired,
-    history: PropTypes.object.isRequired,
-    note: PropTypes.object,
-    onNewNoteEvent: PropTypes.func.isRequired,
-    dispatch: PropTypes.func.isRequired
+  state: PropTypes.object.isRequired,
+  history: PropTypes.object.isRequired,
+  note: PropTypes.object,
+  onNewNoteEvent: PropTypes.func.isRequired,
+  dispatch: PropTypes.func.isRequired,
 };
 
 export default connect(mapStateToProps)(Header);

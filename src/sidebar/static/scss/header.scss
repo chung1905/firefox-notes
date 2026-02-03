@@ -1,4 +1,3 @@
-
 /**
 header Styles
  */
@@ -29,7 +28,8 @@ header {
   padding-left: 8px;
   padding-right: 8px;
 
-  p { // Text between sync button and text menu
+  p {
+    // Text between sync button and text menu
     flex: 100%;
     margin: 0px;
     flex-grow: 1;
@@ -47,10 +47,14 @@ header {
     opacity: 0.5;
   }
 
-  button, a {
+  button,
+  a {
     transition: background 50ms;
-    &:hover { background-color: rgba(12, 12, 13, 0.1); }
-    &:active { background-color: rgba(12, 12, 13, 0.2); }
+    &:hover {
+      background-color: rgba(12, 12, 13, 0.1);
+    }
+    &:active {
+      background-color: rgba(12, 12, 13, 0.2);
+    }
   }
 }
-

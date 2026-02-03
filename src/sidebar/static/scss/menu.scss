@@ -5,22 +5,38 @@
   justify-content: center;
 
   &.open {
-    &.top .wrapper { bottom: 35px; }
-    &.bottom .wrapper { top: 29px; }
+    &.top .wrapper {
+      bottom: 35px;
+    }
+    &.bottom .wrapper {
+      top: 29px;
+    }
     .wrapper {
       visibility: visible;
       opacity: 1;
-      transition: visibility 0s, opacity .300s, top .300s cubic-bezier(0.07, 0.95, 0, 1), bottom .300s cubic-bezier(0.07, 0.95, 0, 1);
+      transition:
+        visibility 0s,
+        opacity 0.3s,
+        top 0.3s cubic-bezier(0.07, 0.95, 0, 1),
+        bottom 0.3s cubic-bezier(0.07, 0.95, 0, 1);
     }
   }
 
   &.close {
-    &.top .wrapper { bottom: 35px; }
-    &.bottom .wrapper { top: 29px; }
+    &.top .wrapper {
+      bottom: 35px;
+    }
+    &.bottom .wrapper {
+      top: 29px;
+    }
     .wrapper {
       visibility: hidden;
       opacity: 0;
-      transition: visibility 0s .300s, opacity .300s cubic-bezier(0.07, 0.95, 0, 1), top 0s .300s, bottom 0s .300s;
+      transition:
+        visibility 0s 0.3s,
+        opacity 0.3s cubic-bezier(0.07, 0.95, 0, 1),
+        top 0s 0.3s,
+        bottom 0s 0.3s;
     }
   }
 
@@ -50,7 +66,6 @@
       top: -9px;
       border-width: 0 9px 9px;
     }
-
   }
 
   .wrapper {
@@ -73,7 +88,7 @@
       }
 
       &:after {
-        content: "";
+        content: '';
         position: absolute;
         right: 8px;
         border-style: solid;
@@ -84,7 +99,7 @@
       }
 
       &:before {
-        content: "";
+        content: '';
         position: absolute;
         right: 8px;
         border-style: solid;
@@ -110,7 +125,9 @@
           line-height: 24px;
           font-size: 13px;
           outline: 0;
-          &:hover, &:focus, &:active {
+          &:hover,
+          &:focus,
+          &:active {
             background-color: rgba(128, 128, 128, 0.2);
           }
         }

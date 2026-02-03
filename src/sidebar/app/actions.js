@@ -1,19 +1,21 @@
-import { SYNC_AUTHENTICATED,
-         KINTO_LOADED,
-         TEXT_SAVED,
-         TEXT_SYNCING,
-         TEXT_SYNCED,
-         RECONNECT_SYNC,
-         DISCONNECTED,
-         EXPORT_HTML,
-         CREATE_NOTE,
-         UPDATE_NOTE,
-         DELETE_NOTE,
-         PLEASE_LOGIN,
-         OPENING_LOGIN,
-         FOCUS_NOTE,
-         ERROR,
-         REQUEST_WELCOME_PAGE } from './utils/constants';
+import {
+  SYNC_AUTHENTICATED,
+  KINTO_LOADED,
+  TEXT_SAVED,
+  TEXT_SYNCING,
+  TEXT_SYNCED,
+  RECONNECT_SYNC,
+  DISCONNECTED,
+  EXPORT_HTML,
+  CREATE_NOTE,
+  UPDATE_NOTE,
+  DELETE_NOTE,
+  PLEASE_LOGIN,
+  OPENING_LOGIN,
+  FOCUS_NOTE,
+  ERROR,
+  REQUEST_WELCOME_PAGE,
+} from './utils/constants';
 
 import INITIAL_CONTENT from './data/initialContent';
 import { getFirstNonEmptyElement, formatFilename } from './utils/utils';
@@ -28,14 +30,19 @@ export function updatedNote(id, content, lastModified) {
 }
 export function updateNote(id, content) {
   const lastModified = new Date();
-  if (content.replace(/&nbsp;/g, '\xa0') !== INITIAL_CONTENT.replace(/\s\s+/g, ' ')) {
-    browser.windows.getCurrent({populate: true}).then((windowInfo) => {
+  if (
+    content.replace(/&nbsp;/g, '\xa0') !==
+    INITIAL_CONTENT.replace(/\s\s+/g, ' ')
+  ) {
+    browser.windows.getCurrent({ populate: true }).then((windowInfo) => {
       chrome.runtime.sendMessage({
         action: UPDATE_NOTE,
         from: windowInfo.id,
         note: {
-          id, content, lastModified
-        }
+          id,
+          content,
+          lastModified,
+        },
       });
     });
   }
@@ -45,7 +52,7 @@ export function updateNote(id, content) {
 export function authenticate(email) {
   localStorage.setItem('userEmail', email);
   browser.runtime.sendMessage({
-    action: 'kinto-sync'
+    action: 'kinto-sync',
   });
   return { type: SYNC_AUTHENTICATED, email };
 }
@@ -55,7 +62,7 @@ export function saved(id, content, lastModified) {
 }
 
 export function syncing() {
-   return { type: TEXT_SYNCING };
+  return { type: TEXT_SYNCING };
 }
 
 export function synced(notes) {
@@ -69,7 +76,7 @@ export function kintoLoad(notes) {
 export function disconnect() {
   localStorage.removeItem('userEmail');
   browser.runtime.sendMessage({
-    action: 'disconnected'
+    action: 'disconnected',
   });
   return { type: DISCONNECTED };
 }
@@ -77,7 +84,7 @@ export function disconnect() {
 // LOGIN PROCESS
 export function openLogin() {
   browser.runtime.sendMessage({
-    action: 'authenticate'
+    action: 'authenticate',
   });
   return { type: OPENING_LOGIN };
 }
@@ -88,7 +95,7 @@ export function pleaseLogin() {
 
 export function reconnectSync() {
   chrome.runtime.sendMessage({
-    action: 'metrics-reconnect-sync'
+    action: 'metrics-reconnect-sync',
   });
   return { type: RECONNECT_SYNC };
 }
@@ -97,7 +104,6 @@ export function createdNote(id, content, lastModified) {
   return { type: CREATE_NOTE, isSyncing: false };
 }
 export function createNote(content = '', origin, id) {
-
   if (!id) {
     id = uuid4();
   }
@@ -108,7 +114,7 @@ export function createNote(content = '', origin, id) {
     id,
     content,
     origin,
-    lastModified: new Date()
+    lastModified: new Date(),
   });
 
   // Return id to callback using promises
@@ -127,19 +133,17 @@ export function deletedNote(id) {
 }
 
 export function deleteNote(id, origin) {
-  chrome.runtime.sendMessage({ action: 'delete-note', id, origin});
+  chrome.runtime.sendMessage({ action: 'delete-note', id, origin });
   return { type: DELETE_NOTE, id, isSyncing: true };
 }
 
-
 // EXPORT HTML
 export function exportHTML(content) {
-
   // get Notes content
   const notesContent = content || '';
   // assign contents to container element for later parsing
   const parentElement = document.createElement('div');
-  parentElement.innerHTML = notesContent; // eslint-disable-line no-unsanitized/property
+  parentElement.innerHTML = notesContent;
 
   let exportFileName = 'blank.html';
   // get the first child element with text
@@ -151,7 +155,9 @@ export function exportHTML(content) {
   }
 
   const exportFileType = 'text/html';
-  const data = new Blob([`
+  const data = new Blob(
+    [
+      `
     <!DOCTYPE html>
       <html lang="en">
         <head>
@@ -159,12 +165,15 @@ export function exportHTML(content) {
           <title>Notes</title>
         </head>
       <body>${notesContent}</body>
-    </html>`.trim()], {'type': exportFileType});
+    </html>`.trim(),
+    ],
+    { type: exportFileType },
+  );
 
   FileSaver.saveAs(data, exportFileName);
 
   chrome.runtime.sendMessage({
-    action: 'metrics-export'
+    action: 'metrics-export',
   });
   return { type: EXPORT_HTML, content };
 }
@@ -178,5 +187,5 @@ export function requestWelcomeNote() {
 }
 
 export function error(message) {
-  return { type: ERROR, message};
+  return { type: ERROR, message };
 }

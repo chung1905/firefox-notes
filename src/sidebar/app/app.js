@@ -22,13 +22,12 @@ const styles = {
   container: {
     flex: '100%',
     display: 'flex',
-    flexDirection: 'column'
-  }
+    flexDirection: 'column',
+  },
 };
 
 // We load store saved by store.js on all events
-browser.storage.local.get().then(result => {
-
+browser.storage.local.get().then((result) => {
   // If no redux, it means user never used the app before.
   // we display initial content to introduce Note
   if (!result.redux) {
@@ -45,7 +44,7 @@ browser.storage.local.get().then(result => {
       store.dispatch(authenticate('...'));
       // Fetch email using credentials
       browser.runtime.sendMessage({
-        action: 'fetch-email'
+        action: 'fetch-email',
       });
     }
   }
@@ -54,19 +53,19 @@ browser.storage.local.get().then(result => {
     store.dispatch(kintoLoad(state.notes));
   }
 
-
   // Render root DOM element
-  ReactDOM.render((
+  ReactDOM.render(
     <Provider store={store}>
       <div style={styles.container}>
         <Router />
         <Footer />
       </div>
-    </Provider>
-  ), document.getElementById('notes'));
+    </Provider>,
+    document.getElementById('notes'),
+  );
 });
 
 // Request sync kinto
 chrome.runtime.sendMessage({
-  action: 'kinto-sync'
+  action: 'kinto-sync',
 });

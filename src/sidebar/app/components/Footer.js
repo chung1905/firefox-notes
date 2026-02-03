@@ -9,7 +9,13 @@ import WarningIcon from './icons/WarningIcon';
 
 import { formatFooterTime } from '../utils/utils';
 
-import { disconnect, openLogin, pleaseLogin, authenticate, exportHTML } from '../actions';
+import {
+  disconnect,
+  openLogin,
+  pleaseLogin,
+  authenticate,
+  exportHTML,
+} from '../actions';
 const expiredDate = new Date('2020/11/01');
 const now = new Date();
 const serversActive = now < expiredDate;
@@ -24,41 +30,46 @@ class Footer extends React.Component {
         isClickable: true,
         isSignInState: true,
         text: () => browser.i18n.getMessage('signInToSync'),
-        tooltip: () => browser.i18n.getMessage('syncNotes')
+        tooltip: () => browser.i18n.getMessage('syncNotes'),
       },
       OPENINGLOGIN: {
         cancelSetup: true,
         animateSyncIcon: true,
-        text: () => browser.i18n.getMessage('openingLoginWindow')
+        text: () => browser.i18n.getMessage('openingLoginWindow'),
       },
       VERIFYACCOUNT: {
         ignoreChange: true,
         yellowBackground: true,
-        text: () => browser.i18n.getMessage('pleaseLogin')
+        text: () => browser.i18n.getMessage('pleaseLogin'),
       },
       RECONNECTSYNC: {
         yellowBackground: true,
         isClickable: true,
         isReconnectState: true,
-        text: () => browser.i18n.getMessage('reconnectSync')
+        text: () => browser.i18n.getMessage('reconnectSync'),
       },
       ERROR: {
         yellowBackground: true,
-        isClickable: false
+        isClickable: false,
       },
       SYNCING: {
         animateSyncIcon: true,
-        text: () => browser.i18n.getMessage('syncProgress')
+        text: () => browser.i18n.getMessage('syncProgress'),
       },
       SYNCED: {
         isClickable: true,
-        text: () => browser.i18n.getMessage('syncComplete3', formatFooterTime(this.props.state.sync.lastSynced))
-      }
+        text: () =>
+          browser.i18n.getMessage(
+            'syncComplete3',
+            formatFooterTime(this.props.state.sync.lastSynced),
+          ),
+      },
     };
 
     this.getFooterState = (state) => {
       let res;
-      if (state.sync.email) { // If user is authenticated
+      if (state.sync.email) {
+        // If user is authenticated
         if (state.sync.error) {
           res = this.STATES.ERROR;
           res.text = () => state.sync.error;
@@ -68,7 +79,8 @@ class Footer extends React.Component {
           res = this.STATES.SYNCED;
         }
       } else {
-        if (state.sync.isOpeningLogin) { // eslint-disable-line no-lonely-if
+        if (state.sync.isOpeningLogin) {
+          // eslint-disable-line no-lonely-if
           res = this.STATES.OPENINGLOGIN;
         } else if (state.sync.isPleaseLogin) {
           res = this.STATES.VERIFYACCOUNT;
@@ -89,7 +101,9 @@ class Footer extends React.Component {
 
     this.getLastSyncedTime = () => {
       if (!this.currentState.ignoreChange) {
-        this.currentState = this.props.state.sync.email ? this.STATES.SYNCED : this.STATES.SIGNIN;
+        this.currentState = this.props.state.sync.email
+          ? this.STATES.SYNCED
+          : this.STATES.SIGNIN;
       }
     };
 
@@ -108,7 +122,9 @@ class Footer extends React.Component {
       if (this.menu.classList.contains('close')) {
         this.menu.classList.replace('close', 'open');
         setTimeout(() => {
-          window.addEventListener('click', this.onCloseListener, { once: true });
+          window.addEventListener('click', this.onCloseListener, {
+            once: true,
+          });
           window.addEventListener('keydown', this.handleKeyPress);
         }, 10);
         this.indexFocusedButton = null; // index of focused button in this.buttons
@@ -135,7 +151,8 @@ class Footer extends React.Component {
           if (this.indexFocusedButton === null) {
             this.indexFocusedButton = this.buttons.length - 1;
           } else {
-            this.indexFocusedButton = (this.indexFocusedButton - 1) % this.buttons.length;
+            this.indexFocusedButton =
+              (this.indexFocusedButton - 1) % this.buttons.length;
             if (this.indexFocusedButton < 0) {
               this.indexFocusedButton = this.buttons.length - 1;
             }
@@ -146,7 +163,8 @@ class Footer extends React.Component {
           if (this.indexFocusedButton === null) {
             this.indexFocusedButton = 0;
           } else {
-            this.indexFocusedButton = (this.indexFocusedButton + 1) % this.buttons.length;
+            this.indexFocusedButton =
+              (this.indexFocusedButton + 1) % this.buttons.length;
           }
           this.buttons[this.indexFocusedButton].focus();
           break;
@@ -159,7 +177,6 @@ class Footer extends React.Component {
     };
 
     this.enableSyncAction = () => {
-
       if (!this.currentState.isClickable) return;
       if (this.props.state.sync.email) {
         props.dispatch(authenticate(this.props.state.sync.email));
@@ -175,7 +192,10 @@ class Footer extends React.Component {
   }
 
   componentDidMount() {
-    if (!serversActive && (!this.currentState.isSignInState || this.currentState.isReconnectState)) {
+    if (
+      !serversActive &&
+      (!this.currentState.isSignInState || this.currentState.isReconnectState)
+    ) {
       // needs a delay before disconnecting
       setTimeout(() => {
         this.props.dispatch(disconnect());
@@ -184,13 +204,12 @@ class Footer extends React.Component {
   }
 
   render() {
-
     if (!this.props.state.kinto.isLoaded) return '';
 
     // Those classes define animation state on #footer-buttons
     const footerClass = classNames({
       warning: this.currentState.yellowBackground,
-      animateSyncIcon: this.currentState.animateSyncIcon
+      animateSyncIcon: this.currentState.animateSyncIcon,
     });
 
     // List of menu used for keyboard navigation
@@ -199,71 +218,127 @@ class Footer extends React.Component {
     return (
       <footer
         id="footer-buttons"
-        ref={footerbuttons => this.footerbuttons = footerbuttons}
-        className={footerClass}>
-
+        ref={(footerbuttons) => (this.footerbuttons = footerbuttons)}
+        className={footerClass}
+      >
         <div id="footerButtons">
-
-        { serversActive && (this.currentState.isSignInState || this.currentState.yellowBackground) ?
-          <button
-            className="fullWidth"
-            title={ this.currentState.tooltip ? this.currentState.tooltip() : '' }
-            onClick={(e) => this.enableSyncAction(e)}>
-            { this.currentState.yellowBackground ?
-              <WarningIcon /> : <SyncIcon />} <span>{ this.currentState.text() }</span>
-          </button>
-          : <div className="fullWidth"></div> }
-
-        { serversActive && (!this.currentState.isSignInState && !this.currentState.yellowBackground) ?
-          <div className={this.currentState.isClickable ? 'isClickable btnWrapper' : 'btnWrapper'}>
+          {serversActive &&
+          (this.currentState.isSignInState ||
+            this.currentState.yellowBackground) ? (
             <button
-              id="enable-sync"
-              disabled={!this.currentState.isClickable}
+              className="fullWidth"
+              title={
+                this.currentState.tooltip ? this.currentState.tooltip() : ''
+              }
               onClick={(e) => this.enableSyncAction(e)}
-              title={browser.i18n.getMessage('syncToMail', this.props.state.sync.email)}
-              className="iconBtn">
-              <SyncIcon/>
+            >
+              {this.currentState.yellowBackground ? (
+                <WarningIcon />
+              ) : (
+                <SyncIcon />
+              )}{' '}
+              <span>{this.currentState.text()}</span>
             </button>
-              <p className={this.currentState.yellowBackground ? 'alignLeft' : null}>{this.currentState.text()}</p>
-          </div>
-          : <div className="fullWidth"></div> }
+          ) : (
+            <div className="fullWidth"></div>
+          )}
 
-          <div className="photon-menu close top left" ref={menu => this.menu = menu }>
+          {serversActive &&
+          !this.currentState.isSignInState &&
+          !this.currentState.yellowBackground ? (
+            <div
+              className={
+                this.currentState.isClickable
+                  ? 'isClickable btnWrapper'
+                  : 'btnWrapper'
+              }
+            >
+              <button
+                id="enable-sync"
+                disabled={!this.currentState.isClickable}
+                onClick={(e) => this.enableSyncAction(e)}
+                title={browser.i18n.getMessage(
+                  'syncToMail',
+                  this.props.state.sync.email,
+                )}
+                className="iconBtn"
+              >
+                <SyncIcon />
+              </button>
+              <p
+                className={
+                  this.currentState.yellowBackground ? 'alignLeft' : null
+                }
+              >
+                {this.currentState.text()}
+              </p>
+            </div>
+          ) : (
+            <div className="fullWidth"></div>
+          )}
+
+          <div
+            className="photon-menu close top left"
+            ref={(menu) => (this.menu = menu)}
+          >
             <button
-              ref={contextMenuBtn => this.contextMenuBtn = contextMenuBtn}
+              ref={(contextMenuBtn) => (this.contextMenuBtn = contextMenuBtn)}
               className="iconBtn"
-              onClick={(e) => this.toggleMenu(e)}>
+              onClick={(e) => this.toggleMenu(e)}
+            >
               <MoreIcon />
             </button>
             <div className="wrapper">
-              <ul role="menu" >
+              <ul role="menu">
                 <li>
-                  { !this.currentState.isSignInState ?
+                  {!this.currentState.isSignInState ? (
                     <button
-                    role="menuitem"
-                    onKeyDown={this.handleKeyPress}
-                    ref={btn => btn ? this.buttons.push(btn) : null }
-                    title={browser.i18n.getMessage(this.props.state.sync.email ? 'disableSync' : 'cancelSetup')}
-                    onClick={ this.disconnectFromSync }>
-                    { !this.props.state.sync.email ? browser.i18n.getMessage('cancelSetup') : '' }
-                    { this.props.state.sync.email && this.currentState.isReconnectState ? browser.i18n.getMessage('removeAccount') : '' }
-                    { this.props.state.sync.email && !this.currentState.isReconnectState ? browser.i18n.getMessage('disableSync') : '' }
-                  </button> : null }
+                      role="menuitem"
+                      onKeyDown={this.handleKeyPress}
+                      ref={(btn) => (btn ? this.buttons.push(btn) : null)}
+                      title={browser.i18n.getMessage(
+                        this.props.state.sync.email
+                          ? 'disableSync'
+                          : 'cancelSetup',
+                      )}
+                      onClick={this.disconnectFromSync}
+                    >
+                      {!this.props.state.sync.email
+                        ? browser.i18n.getMessage('cancelSetup')
+                        : ''}
+                      {this.props.state.sync.email &&
+                      this.currentState.isReconnectState
+                        ? browser.i18n.getMessage('removeAccount')
+                        : ''}
+                      {this.props.state.sync.email &&
+                      !this.currentState.isReconnectState
+                        ? browser.i18n.getMessage('disableSync')
+                        : ''}
+                    </button>
+                  ) : null}
                   <button
                     role="menuitem"
                     onKeyDown={this.exportAll}
-                    ref={btn => btn ? this.buttons.push(btn) : null }
+                    ref={(btn) => (btn ? this.buttons.push(btn) : null)}
                     title="Export All Notes"
-                    onClick={ this.exportAll }> Export All Notes
+                    onClick={this.exportAll}
+                  >
+                    {' '}
+                    Export All Notes
                   </button>
                 </li>
               </ul>
             </div>
           </div>
         </div>
-        { serversActive && <div className="serverAlert">
-          Notes syncing will be disabled on <a href='https://support.mozilla.org/en-US/kb/notes-status'>November 1, 2020</a>
-        </div>}
+        {serversActive && (
+          <div className="serverAlert">
+            Notes syncing will be disabled on{' '}
+            <a href="https://support.mozilla.org/en-US/kb/notes-status">
+              November 1, 2020
+            </a>
+          </div>
+        )}
       </footer>
     );
   }
@@ -271,13 +346,13 @@ class Footer extends React.Component {
 
 function mapStateToProps(state) {
   return {
-    state
+    state,
   };
 }
 
 Footer.propTypes = {
   state: PropTypes.object.isRequired,
-  dispatch: PropTypes.func.isRequired
+  dispatch: PropTypes.func.isRequired,
 };
 
 export default connect(mapStateToProps)(Footer);
