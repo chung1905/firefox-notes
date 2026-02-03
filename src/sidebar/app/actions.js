@@ -4,14 +4,11 @@ import {
   TEXT_SAVED,
   TEXT_SYNCING,
   TEXT_SYNCED,
-  RECONNECT_SYNC,
   DISCONNECTED,
   EXPORT_HTML,
   CREATE_NOTE,
   UPDATE_NOTE,
   DELETE_NOTE,
-  PLEASE_LOGIN,
-  OPENING_LOGIN,
   FOCUS_NOTE,
   ERROR,
   REQUEST_WELCOME_PAGE,
@@ -28,6 +25,7 @@ import * as FileSaver from 'file-saver';
 export function updatedNote(id, content, lastModified) {
   return { type: UPDATE_NOTE, id, content, lastModified };
 }
+
 export function updateNote(id, content) {
   const lastModified = new Date();
   if (
@@ -49,12 +47,12 @@ export function updateNote(id, content) {
   return { type: UPDATE_NOTE, id, content, lastModified };
 }
 
-export function authenticate(email) {
-  localStorage.setItem('userEmail', email);
+export function authenticate() {
+  // With storage.sync, just trigger a sync
   browser.runtime.sendMessage({
     action: 'kinto-sync',
   });
-  return { type: SYNC_AUTHENTICATED, email };
+  return { type: SYNC_AUTHENTICATED };
 }
 
 export function saved(id, content, lastModified) {
@@ -74,41 +72,19 @@ export function kintoLoad(notes) {
 }
 
 export function disconnect() {
-  localStorage.removeItem('userEmail');
-  browser.runtime.sendMessage({
-    action: 'disconnected',
-  });
   return { type: DISCONNECTED };
-}
-
-// LOGIN PROCESS
-export function openLogin() {
-  browser.runtime.sendMessage({
-    action: 'authenticate',
-  });
-  return { type: OPENING_LOGIN };
-}
-
-export function pleaseLogin() {
-  return { type: PLEASE_LOGIN };
-}
-
-export function reconnectSync() {
-  chrome.runtime.sendMessage({
-    action: 'metrics-reconnect-sync',
-  });
-  return { type: RECONNECT_SYNC };
 }
 
 export function createdNote(id, content, lastModified) {
   return { type: CREATE_NOTE, isSyncing: false };
 }
+
 export function createNote(content = '', origin, id) {
   if (!id) {
     id = uuid4();
   }
 
-  // Send create request to kinto with uuid4 id
+  // Send create request to storage.sync
   chrome.runtime.sendMessage({
     action: 'create-note',
     id,

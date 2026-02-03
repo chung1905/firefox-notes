@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 
 import store from './store';
-import { authenticate, kintoLoad, requestWelcomeNote } from './actions';
+import { kintoLoad, requestWelcomeNote } from './actions';
 
 import Router from './router';
 import Footer from './components/Footer';
@@ -36,19 +36,6 @@ browser.storage.local.get().then((result) => {
 
   const state = JSON.parse(result.redux || '{}');
 
-  // We use stored state to propagate actions and avoid keeping
-  if (result.hasOwnProperty('credentials')) {
-    if (state.sync && state.sync.email) {
-      store.dispatch(authenticate(state.sync.email));
-    } else {
-      store.dispatch(authenticate('...'));
-      // Fetch email using credentials
-      browser.runtime.sendMessage({
-        action: 'fetch-email',
-      });
-    }
-  }
-
   if (state.notes) {
     store.dispatch(kintoLoad(state.notes));
   }
@@ -65,7 +52,7 @@ browser.storage.local.get().then((result) => {
   );
 });
 
-// Request sync kinto
+// Request sync on load
 chrome.runtime.sendMessage({
   action: 'kinto-sync',
 });

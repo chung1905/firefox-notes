@@ -6,12 +6,9 @@ import {
   TEXT_SYNCING,
   TEXT_SYNCED,
   KINTO_LOADED,
-  OPENING_LOGIN,
-  RECONNECT_SYNC,
   CREATE_NOTE,
   UPDATE_NOTE,
   DELETE_NOTE,
-  PLEASE_LOGIN,
   FOCUS_NOTE,
   ERROR,
   REQUEST_WELCOME_PAGE,
@@ -26,41 +23,12 @@ function sync(sync = {}, action) {
   switch (action.type) {
     case SYNC_AUTHENTICATED:
       return Object.assign({}, sync, {
-        isOpeningLogin: false,
-        isPleaseLogin: false,
-        isReconnectSync: false,
-        email: action.email,
         lastSynced: new Date(),
         isSyncing: true,
         error: null,
       });
     case DISCONNECTED:
       return Object.assign({}, sync, {
-        email: null,
-        isOpeningLogin: false,
-        isPleaseLogin: false,
-        isReconnectSync: false,
-        error: null,
-      });
-    case OPENING_LOGIN:
-      return Object.assign({}, sync, {
-        isOpeningLogin: true,
-        isPleaseLogin: false,
-        isReconnectSync: false,
-      });
-    case PLEASE_LOGIN:
-      return Object.assign({}, sync, {
-        isOpeningLogin: false,
-        isPleaseLogin: true,
-        isReconnectSync: false,
-        error: null,
-      });
-    case RECONNECT_SYNC:
-      return Object.assign({}, sync, {
-        email: null,
-        isOpeningLogin: false,
-        isPleaseLogin: false,
-        isReconnectSync: true,
         error: null,
       });
     case DELETE_NOTE:
@@ -77,7 +45,7 @@ function sync(sync = {}, action) {
       });
     case TEXT_SAVED:
       return Object.assign({}, sync, {
-        isSyncing: sync.email ? sync.isSyncing : false,
+        isSyncing: sync.isSyncing,
       });
     case TEXT_SYNCING:
       return Object.assign({}, sync, {
@@ -97,7 +65,6 @@ function sync(sync = {}, action) {
       return Object.assign({}, sync, {
         focusedNoteId: action.id,
       });
-    // REQUEST_WELCOME_PAGE is triggered on start if redux has never been init.
     case REQUEST_WELCOME_PAGE:
       return Object.assign({}, sync, {
         welcomePage: true,

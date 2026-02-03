@@ -1,211 +1,245 @@
-const KINTO_SERVER = 'https://testpilot.settings.services.mozilla.com/v1';
-// XXX: Read this from Kinto fxa-params
-const FXA_CLIENT_ID = 'a3dbd8c5a6fd93e2';
-const FXA_OAUTH_SERVER = 'https://oauth.accounts.firefox.com/v1';
-const FXA_PROFILE_SERVER = 'https://profile.accounts.firefox.com/v1';
-const FXA_SCOPES = ['profile', 'https://identity.mozilla.com/apps/notes'];
+/* global storageSync */
+/**
+ * Background script for Firefox Notes
+ *
+ * Handles:
+ * - Note sync via browser.storage.sync
+ * - Context menu for "Send to Notes"
+ * - Sidebar open/close
+ */
+
 let isEditorReady = false;
 let editorConnectedDeferred;
-let isEditorConnected = new Promise(resolve => { editorConnectedDeferred = {resolve}; });
+let isEditorConnected = new Promise((resolve) => {
+  editorConnectedDeferred = { resolve };
+});
 
-// Kinto sync and encryption
-const client = new Kinto({remote: KINTO_SERVER, bucket: 'default'});
-// Used by sync to load only changes from lastModified timestamp.
-let lastSyncTimestamp = null; // eslint-disable-line no-unused-vars
-
-function fetchProfile(credentials) {
-  return fxaFetchProfile(FXA_PROFILE_SERVER, credentials.access_token).then((profile) => {
-    browser.storage.local.set({credentials}).then(() => {
-      chrome.runtime.sendMessage({
-        action: 'sync-authenticated',
-        credentials,
-        profile
-      });
+/**
+ * Load notes and send to sidebar
+ */
+async function loadAndSendNotes() {
+  try {
+    const notes = await storageSync.loadNotes();
+    browser.runtime.sendMessage({
+      action: 'kinto-loaded', // Keep action name for compatibility
+      notes,
     });
-  });
+  } catch (e) {
+    console.error('Failed to load notes:', e); // eslint-disable-line no-console
+    browser.runtime.sendMessage({
+      action: 'kinto-loaded',
+      notes: [],
+    });
+  }
 }
 
-function authenticate() {
-  const fxaKeysUtil = new fxaCryptoRelier.OAuthUtils();
-    chrome.runtime.sendMessage({
-      action: 'sync-opening'
-    });
-  fxaKeysUtil.launchWebExtensionKeyFlow(FXA_CLIENT_ID, {
-    redirectUri: browser.identity.getRedirectURL(),
-    scopes: FXA_SCOPES,
-  }).then((loginDetails) => {
-    lastSyncTimestamp = null;
-    const key = loginDetails.keys['https://identity.mozilla.com/apps/notes'];
-    const credentials = {
-      access_token: loginDetails.access_token,
-      refresh_token: loginDetails.refresh_token,
-      key,
-      metadata: {
-        server: FXA_OAUTH_SERVER,
-        client_id: FXA_CLIENT_ID,
-        scope: FXA_SCOPES
-      }
-    };
-
-    fetchProfile(credentials);
-
-  }, (err) => {
-    console.error('FxA login failed', err); // eslint-disable-line no-console
-    chrome.runtime.sendMessage({
-      action: 'reconnect'
-    });
-  });
-}
-browser.runtime.onMessage.addListener(function(eventData) {
-  const credentials = new BrowserStorageCredentials(browser.storage.local);
-
+/**
+ * Handle messages from sidebar
+ */
+browser.runtime.onMessage.addListener(function (eventData) {
   switch (eventData.action) {
     case 'authenticate':
-      credentials.get()
-        .then(result => {
-          if (!result) {
-            authenticate();
-          } else {
-            chrome.runtime.sendMessage({
-              action: 'text-syncing'
-            });
-            loadFromKinto(client, credentials);
-          }
-        });
+      // With storage.sync, we don't need authentication
+      // Just load notes directly
+      browser.runtime.sendMessage({
+        action: 'sync-authenticated',
+        profile: { email: '' }, // No email needed
+      });
+      loadAndSendNotes();
       break;
+
     case 'disconnected':
-      disconnectFromKinto(client).then(() => {
-        credentials.clear();
-        chrome.runtime.sendMessage({
-          action: 'disconnected'
-        });
+      // With storage.sync, disconnect just clears local state
+      // Notes remain in storage.sync
+      browser.runtime.sendMessage({
+        action: 'disconnected',
       });
       break;
+
     case 'kinto-load':
-      retrieveNote(client).then((result) => {
-        browser.runtime.sendMessage({
-          action: 'kinto-loaded',
-          notes: result.notes
-        });
-      }).catch((e) => {
-        // nothing to do here
-      });
-      break;
     case 'kinto-sync':
-      loadFromKinto(client, credentials);
+      loadAndSendNotes();
       break;
+
     case 'editor-ready':
       isEditorReady = true;
       break;
+
     case 'create-note':
-      // We create a note, and send id with note-created nessage
-      createNote(client, credentials, {
-        id: eventData.id,
-        content: eventData.content,
-        lastModified: eventData.lastModified
-      }).then(() => {
-        browser.runtime.sendMessage({
-          action: 'create-note',
-          id: eventData.id
+      storageSync
+        .saveNote({
+          id: eventData.id,
+          content: eventData.content,
+          lastModified: eventData.lastModified || Date.now(),
+        })
+        .then(() => {
+          browser.runtime.sendMessage({
+            action: 'create-note',
+            id: eventData.id,
+          });
+        })
+        .catch((error) => {
+          handleSaveError(error);
         });
-      });
       break;
+
     case 'update-note':
-      saveToKinto(client, credentials, eventData.note, eventData.from);
+      browser.runtime.sendMessage({
+        action: 'text-syncing',
+      });
+
+      storageSync
+        .saveNote(eventData.note)
+        .then(() => {
+          browser.runtime.sendMessage({
+            action: 'text-saved',
+            note: eventData.note,
+            from: eventData.from,
+          });
+          browser.runtime.sendMessage({
+            action: 'text-synced',
+            note: eventData.note,
+            conflict: false,
+            from: eventData.from,
+          });
+        })
+        .catch((error) => {
+          handleSaveError(error);
+        });
       break;
+
     case 'delete-note':
-      // We create a note, and send id with note-created nessage
-      deleteNote(client, credentials, eventData.id).then(() => {
-        // loadFromKinto(client, credentials);
+      storageSync.deleteNote(eventData.id).then(() => {
         browser.runtime.sendMessage({
           action: 'delete-note',
-          id: eventData.id
+          id: eventData.id,
         });
       });
       break;
+
     case 'theme-changed':
       browser.runtime.sendMessage({
-        action: 'theme-changed'
+        action: 'theme-changed',
       });
       break;
+
     case 'fetch-email':
-      credentials.get().then(received => {
-        fetchProfile(received).catch(e => {
-          chrome.runtime.sendMessage({
-            action: 'reconnect'
-          });
+      // No email to fetch with storage.sync
+      browser.runtime.sendMessage({
+        action: 'sync-authenticated',
+        profile: { email: '' },
+      });
+      break;
+
+    case 'get-storage-usage':
+      storageSync.getUsage().then((usage) => {
+        browser.runtime.sendMessage({
+          action: 'storage-usage',
+          usage,
         });
       });
       break;
   }
 });
 
-// Handle opening and closing the add-on.
-function connected(p) {
-  checkIndexedDbHealth().then(() => {},
-    (idbError) => {
-      console.warn('idbError', idbError); // eslint-disable-line no-console
-    }
-  );
+/**
+ * Handle save errors
+ */
+function handleSaveError(error) {
+  if (error.name === 'NoteTooLargeError') {
+    browser.runtime.sendMessage({
+      action: 'error',
+      message:
+        browser.i18n.getMessage('noteTooLarge') ||
+        'Note is too large to sync. Please reduce the content size.',
+    });
+  } else if (error.name === 'StorageLimitError') {
+    browser.runtime.sendMessage({
+      action: 'error',
+      message:
+        browser.i18n.getMessage('insufficientStorage') ||
+        'Storage limit reached. Please delete some notes.',
+    });
+  } else {
+    console.error('Save error:', error); // eslint-disable-line no-console
+    browser.runtime.sendMessage({
+      action: 'error',
+      message: error.message,
+    });
+  }
+}
 
+/**
+ * Listen for sync changes from other devices
+ */
+storageSync.onSyncChanged(() => {
+  // Reload all notes when sync brings changes from other devices
+  loadAndSendNotes();
+});
+
+/**
+ * Handle sidebar connection
+ */
+function connected(p) {
   editorConnectedDeferred.resolve();
 
   p.onDisconnect.addListener(() => {
-    // sidebar closed, therefore editor is not ready to receive any content
-    isEditorConnected = new Promise(resolve => { editorConnectedDeferred = {resolve}; });
+    isEditorConnected = new Promise((resolve) => {
+      editorConnectedDeferred = { resolve };
+    });
     isEditorReady = false;
   });
 }
 
 browser.runtime.onConnect.addListener(connected);
 
+/**
+ * Initialize theme
+ */
 const defaultTheme = {
-  theme: 'default'
+  theme: 'default',
 };
 
-browser.storage.local.get()
-  .then((storedSettings) => {
-    // if no theme setting exists...
-    if (!storedSettings.theme)
-      // set defaultTheme as initial theme in local storage
-      browser.storage.local.set(defaultTheme);
+browser.storage.local.get().then((storedSettings) => {
+  if (!storedSettings.theme) {
+    browser.storage.local.set(defaultTheme);
+  }
 });
 
-// Handle onClick event for the toolbar button
+/**
+ * Handle toolbar button click
+ */
 browser.browserAction.onClicked.addListener(() => {
-  // open sidebar which will trigger `isEditorReady`...
   if (!isEditorReady) {
     browser.sidebarAction.open();
   }
 });
 
-// context menu for 'Send to Notes'
+/**
+ * Context menu for 'Send to Notes'
+ */
 browser.contextMenus.create({
   id: 'send-to-notes',
   title: browser.i18n.getMessage('sendToNotes'),
   contexts: ['selection'],
-  // disables context menu item for Notes' `index.html` page
-  documentUrlPatterns: ['<all_urls>']
+  documentUrlPatterns: ['<all_urls>'],
 });
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
-
-  // open sidebar which will trigger `isEditorReady`...
   if (!isEditorReady) {
     browser.sidebarAction.open();
   }
-  // then send selection text to Editor.js once editor instance is initialized and ready
   sendSelectionText(info.selectionText, tab.windowId);
 });
 
-// We receive this ... GREAT
+/**
+ * Send selected text to Notes
+ */
 async function sendSelectionText(selectionText, windowId) {
-  // if editor ready, go ahead and send selected text to be pasted in Notes,
-  // otherwise wait half a second before trying again
   await isEditorConnected;
   chrome.runtime.sendMessage({
     action: 'send-to-notes',
     windowId,
-    text: selectionText
+    text: selectionText,
   });
 }

@@ -17,7 +17,7 @@
   },
   "sidebar_action": {
     "default_icon": "icons/notes.svg",
-    "default_title" : "Notes",
+    "default_title": "Notes",
     "default_panel": "sidebar/index.html"
   },
   "browser_action": {
@@ -29,22 +29,9 @@
     "default_area": "navbar",
     "default_title": "Firefox Notes"
   },
-  "permissions": [
-    "contextMenus",
-    "storage",
-    "identity"
-  ],
+  "permissions": ["contextMenus", "storage"],
   "background": {
-    "scripts": [
-      "vendor/jose.js",
-      "vendor/kinto-http.js",
-      "vendor/kinto.js",
-      "vendor/fxa-crypto-relier/fxa-crypto-relier.js",
-      "utils.js",
-      "fxa-utils.js",
-      "sync.js",
-      "background.js"
-    ]
+    "scripts": ["utils.js", "storage-sync.js", "background.js"]
   },
   "options_ui": {
     "page": "settings/settings.html"

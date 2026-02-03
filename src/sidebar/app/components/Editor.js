@@ -78,12 +78,10 @@ class Editor extends React.Component {
                       updateNote(this.props.note.id, content),
                     );
                   }
-                } else {
-                  if (this.props.note.id) {
-                    this.props.dispatch(
-                      deleteNote(this.props.note.id, FROM_BLANK_NOTE),
-                    );
-                  }
+                } else if (this.props.note.id) {
+                  this.props.dispatch(
+                    deleteNote(this.props.note.id, FROM_BLANK_NOTE),
+                  );
                 }
               }
               this.ignoreChange = false;

@@ -6,7 +6,6 @@ import {
   TEXT_SYNCED,
   CREATE_NOTE,
   DELETE_NOTE,
-  RECONNECT_SYNC,
   DISCONNECTED,
   ERROR,
 } from './utils/constants';
@@ -19,31 +18,27 @@ import {
   saved,
   syncing,
   synced,
-  reconnectSync,
   kintoLoad,
   updatedNote,
   error,
 } from './actions';
 import store from './store';
+
 /**
- * For each event, action on redux to update UI. No longer any event from chrome in components
- * Share state between instances ... update-redux?
- * No idea if this is a good idea or not.
+ * For each event, action on redux to update UI.
+ * Share state between instances.
  */
 
 chrome.runtime.onMessage.addListener((eventData) => {
   switch (eventData.action) {
     //
-    // FOOTER EVENTS
+    // SYNC EVENTS
     //
     case SYNC_AUTHENTICATED:
-      if (eventData.profile && eventData.profile.email) {
-        store.dispatch(authenticate(eventData.profile.email));
-      }
+      store.dispatch(authenticate());
       break;
     case KINTO_LOADED:
       if (!eventData.notes) {
-        // As seen in units, kinto_laoded should return empty list if no entries
         store.dispatch(kintoLoad());
       } else {
         store.dispatch(kintoLoad(eventData.notes));
@@ -80,8 +75,6 @@ chrome.runtime.onMessage.addListener((eventData) => {
     case TEXT_SYNCED:
       browser.windows.getCurrent({ populate: true }).then((windowInfo) => {
         if (eventData.from !== windowInfo.id && !eventData.conflict) {
-          // sync.isSyncing being true means this instance triggered syncing
-          // so content should be up to date.
           if (eventData.note) {
             store.dispatch(
               updatedNote(
@@ -96,16 +89,11 @@ chrome.runtime.onMessage.addListener((eventData) => {
       });
       store.dispatch(synced());
       break;
-    case RECONNECT_SYNC:
-      store.dispatch(reconnectSync());
-      break;
     case ERROR:
       store.dispatch(error(eventData.message));
       break;
     case DISCONNECTED:
-      if (store.getState().sync.email) {
-        store.dispatch(disconnect());
-      }
+      store.dispatch(disconnect());
       break;
   }
 });
