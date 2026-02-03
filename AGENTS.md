@@ -10,39 +10,13 @@ Firefox Notes is a Firefox WebExtension that provides a sidebar for taking notes
 - **Sync**: Kinto-based sync with Firefox Accounts (FxA) OAuth + encryption
 - **Native App**: React Native Android companion app (in `/native/`)
 
-**Tech Stack**: JavaScript (ES6+), React 16.2, Redux 3.7, Webpack 3, SCSS, Node.js 8+
-
-## Node.js Compatibility
-
-**WARNING**: This project requires Node.js 8 and will NOT work on modern Node.js (v16+).
-
-**Blockers for modern Node.js:**
-
-- `node-sass@4.14.1` - requires Python 2 and native compilation via node-gyp
-- `karma@1.7.1` - explicitly requires Node 0.10-8
-- `node-gyp@3.8.0` - old version incompatible with modern Node
-- Many deprecated dependencies with security vulnerabilities
-
-**To run this project**, use Node.js 8 via nvm:
-
-```bash
-nvm install 8
-nvm use 8           # or: nvm use (reads .nvmrc)
-```
-
-**To modernize**, these dependencies need replacement:
-
-- `node-sass` → `sass` (Dart Sass)
-- `karma` → modern version or switch to Jest/Vitest
-- `webpack@3` → `webpack@5`
-- `babel-preset-es2015` → `@babel/preset-env`
+**Tech Stack**: JavaScript (ES6+), React 16.2, Redux 3.7, Webpack 5, SCSS, Node.js 18+
 
 ## Build/Lint/Test Commands
 
 ### Installation
 
 ```bash
-nvm use 8            # Required: use Node.js 8
 npm install          # Install dependencies (runs postinstall automatically)
 ```
 
@@ -59,7 +33,6 @@ npm run webpack      # Build with webpack (one-time)
 
 ```bash
 npm run build        # Full production build (clean + webpack + web-ext)
-npm run build-ck     # Build CKEditor only
 npm run clean        # Clean build artifacts
 npm run package      # Build and create addon.xpi
 ```
@@ -77,7 +50,7 @@ npm run format       # Format with Prettier (single quotes)
 
 ```bash
 npm test             # Run all tests (unit + integration)
-npm run test:karma   # Run unit tests only (Karma + Mocha)
+npm run test:karma   # Run unit tests only (Karma + Mocha) - requires Node 8
 npm run test:ui      # Run integration tests (Selenium + Mocha)
 ```
 
