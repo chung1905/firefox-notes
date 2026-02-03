@@ -6,6 +6,7 @@ const path = require("path");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 
 module.exports = {
+  mode: "development",
   devtool: "source-map",
 
   entry: [path.resolve(__dirname, "src", "sidebar", "app", "app.js")],
@@ -13,15 +14,20 @@ module.exports = {
   output: {
     // build to the extension src vendor directory
     path: path.resolve(__dirname, "build"),
-    filename: path.join("sidebar", "app.js")
+    filename: path.join("sidebar", "app.js"),
+    clean: true
   },
 
   plugins: [
     // Moves files
-    new CopyWebpackPlugin([{ from: path.join("src") }], {
-      ignore: [
-        path.join("sidebar", "app", "**", "*"),
-        path.join("sidebar", "static", "scss", "**", "*")
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: path.join("src"),
+          globOptions: {
+            ignore: ["**/sidebar/app/**", "**/sidebar/static/scss/**"]
+          }
+        }
       ]
     })
   ],
@@ -42,25 +48,17 @@ module.exports = {
       {
         test: /\.scss$/,
         use: [
-          {
-            loader: "style-loader" // creates style nodes from JS strings
-          },
-          {
-            loader: "css-loader" // translates CSS into CommonJS
-          },
-          {
-            loader: "sass-loader" // compiles Sass to CSS
-          }
+          "style-loader", // creates style nodes from JS strings
+          "css-loader", // translates CSS into CommonJS
+          "sass-loader" // compiles Sass to CSS
         ]
       },
       {
-        test: /\.(jpe?g|png|gif|svg|eot|woff|ttf|svg|woff2)$/,
-        options: {
-          name: "[path][name].[ext]",
-          context: "src",
-          publicPath: "../"
-        },
-        loader: "file-loader"
+        test: /\.(jpe?g|png|gif|svg|eot|woff|ttf|woff2)$/,
+        type: "asset/resource",
+        generator: {
+          filename: "[path][name][ext]"
+        }
       }
     ]
   }
