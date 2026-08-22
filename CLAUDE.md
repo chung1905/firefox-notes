@@ -168,6 +168,13 @@ strings come from `browser.i18n.getMessage('key')`.
 
 ## Gotchas
 
+- **Never run `npm audit fix --force` in this repo.** The `addons-linter`
+  advisory covers every `web-ext` from 6.1.0 up, so npm's only "fix" is to
+  downgrade web-ext to 5.5.0 — which pulls in `decompress`, `request`,
+  `form-data` and `shell-quote` and takes the tree from 9 findings to 64, six
+  of them critical. It trades one dev-only high for far worse. This has already
+  happened once, silently, in the working tree. The findings that remain are
+  dev-only and unfixable upstream; leave them.
 - **CKEditor is lazily loaded.** Reach it only through `utils/loadEditor.js`,
   which dynamically imports `utils/editorBundle.js`. That module is the one
   place allowed to `import { ... } from 'ckeditor5'`, and only by *named*
