@@ -54,36 +54,53 @@ function customizeEditor(editor) {
     cancel();
   });
 
-  localizeEditorButtons();
+  try {
+    localizeEditorButtons(editor);
+  } catch (error) {
+    // A missing label is cosmetic; it must not abort customizeEditor and
+    // leave the Alt+Shift+W / Ctrl+S handlers above unregistered.
+    console.error('Could not localize the toolbar:', error); // eslint-disable-line no-console
+  }
 }
 
-function localizeEditorButtons() {
+// Toolbar labels, keyed by the toolbar item names in editorConfig.js. Walking
+// the editor's own item collection replaces the old nth-child lookups, which
+// silently broke whenever CKEditor changed its toolbar markup.
+const TOOLBAR_LABELS = {
+  heading: () => browser.i18n.getMessage('fontSizeTitle'),
+  bold: (key) => `${browser.i18n.getMessage('boldTitle')} (${key}+B)`,
+  italic: (key) => `${browser.i18n.getMessage('italicTitle')} (${key}+I)`,
+  strikethrough: () => browser.i18n.getMessage('strikethroughTitle'),
+  bulletedList: () => browser.i18n.getMessage('bulletedListTitle'),
+  numberedList: () => browser.i18n.getMessage('numberedListTitle'),
+};
+
+function localizeEditorButtons(editor) {
   // Clear CKEditor tooltips. Fixes: https://github.com/mozilla/notes/issues/410
   document.querySelectorAll('.ck-toolbar .ck-tooltip__text').forEach((sel) => {
     sel.remove();
   });
 
-  let userOSKey;
+  const userOSKey = navigator.platform.startsWith('Mac') ? '\u2318' : 'Ctrl';
+  const items = editor.ui.view.toolbar?.items;
+  const configured = editor.config.get('toolbar');
+  const names = Array.isArray(configured) ? configured : configured?.items;
 
-  if (navigator.appVersion.indexOf('Mac') !== -1) userOSKey = '⌘';
-  else userOSKey = 'Ctrl';
+  if (!items || !names) {
+    return;
+  }
 
-  const size = document.querySelector('button.ck-button:nth-child(1)'),
-    // Need to target buttons by index. Ref: https://github.com/ckeditor/ckeditor5-basic-styles/issues/59
-    bold = document.querySelector('button.ck-button:nth-child(2)'),
-    italic = document.querySelector('button.ck-button:nth-child(3)'),
-    strike = document.querySelector('button.ck-button:nth-child(4)'),
-    bullet = document.querySelector('button.ck-button:nth-child(5)');
-  // ordered = document.querySelector('button.ck-button:nth-child(6)');
+  // Toolbar items are created in the order given by config.toolbar.
+  names.forEach((name, index) => {
+    const label = TOOLBAR_LABELS[name];
+    const item = items.get(index);
+    // A dropdown (heading) keeps its button on `buttonView`.
+    const element = item?.buttonView?.element ?? item?.element;
 
-  // Setting button titles in place of tooltips
-  size.title = browser.i18n.getMessage('fontSizeTitle');
-  bold.title = browser.i18n.getMessage('boldTitle') + ' (' + userOSKey + '+B)';
-  italic.title =
-    browser.i18n.getMessage('italicTitle') + ' (' + userOSKey + '+I)';
-  strike.title = browser.i18n.getMessage('strikethroughTitle');
-  // ordered.title = browser.i18n.getMessage('numberedListTitle');
-  bullet.title = browser.i18n.getMessage('bulletedListTitle');
+    if (label && element) {
+      element.title = label(userOSKey);
+    }
+  });
 }
 
 export { customizeEditor };

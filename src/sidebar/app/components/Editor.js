@@ -1,6 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import { ClassicEditor } from 'ckeditor5';
+
+import 'ckeditor5/ckeditor5.css';
 
 import INITIAL_CONFIG from '../data/editorConfig';
 import { SEND_TO_NOTES, FROM_BLANK_NOTE } from '../utils/constants';
