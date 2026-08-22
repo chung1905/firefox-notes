@@ -1,6 +1,6 @@
 import React from 'react';
 
-function FeedbackIcon(props) {
+function FeedbackIcon() {
   return (
     <svg
       id="Layer_1"

@@ -23,7 +23,7 @@ class Header extends React.Component {
     };
 
     // Open and close menu
-    this.toggleMenu = (e) => {
+    this.toggleMenu = () => {
       if (this.menu && this.menu.classList.contains('close')) {
         this.menu.classList.replace('close', 'open');
         setTimeout(() => {
@@ -118,7 +118,7 @@ class Header extends React.Component {
           className="photon-menu close bottom left"
           ref={(menu) => (this.menu = menu)}
         >
-          <button className="iconBtn" onClick={(e) => this.toggleMenu(e)}>
+          <button className="iconBtn" onClick={this.toggleMenu}>
             <MoreIcon />
           </button>
           <div className="wrapper">

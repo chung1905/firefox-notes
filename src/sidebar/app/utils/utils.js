@@ -41,12 +41,7 @@ function getFirstNonEmptyElement(parentElement) {
   );
 
   // search for first child element that is not empty and return it
-  const nonEmptyChild = parentElementChildrenArray.find((el) => {
-    if (el.textContent.trim() !== '') {
-      return el.textContent.trim();
-    }
-  });
-  return nonEmptyChild;
+  return parentElementChildrenArray.find((el) => el.textContent.trim() !== '');
 }
 
 function getFirstLineFromContent(content) {

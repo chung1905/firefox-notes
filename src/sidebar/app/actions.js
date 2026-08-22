@@ -75,7 +75,9 @@ export function disconnect() {
   return { type: DISCONNECTED };
 }
 
-export function createdNote(id, content, lastModified) {
+// The note was already added optimistically by the createNote thunk, so this
+// only acknowledges the round-trip. The reducer ignores it without an id.
+export function createdNote() {
   return { type: CREATE_NOTE, isSyncing: false };
 }
 
@@ -94,8 +96,8 @@ export function createNote(content = '', origin, id) {
   });
 
   // Return id to callback using promises
-  const fct = (dispatch, getState) => {
-    return new Promise((resolve, reject) => {
+  const fct = (dispatch) => {
+    return new Promise((resolve) => {
       dispatch({ type: CREATE_NOTE, id, content });
       resolve(id);
     });

@@ -17,7 +17,7 @@ const styles = {
 };
 
 class Editor extends React.Component {
-  constructor(props, context) {
+  constructor(props) {
     super(props);
     this.props = props;
     this.editor = null; // Editor object
