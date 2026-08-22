@@ -29,6 +29,20 @@ module.exports = (env, argv) => {
       clean: true
     },
 
+    resolve: {
+      // Preact via its React compatibility layer. react-redux and the
+      // components are unchanged; this is an aliasing change only.
+      // The $ suffixes are exact matches, so the /client subpath below is
+      // not swallowed by the bare react-dom alias.
+      alias: {
+        react$: "preact/compat",
+        "react/jsx-runtime": "preact/jsx-runtime",
+        "react-dom$": "preact/compat",
+        "react-dom/client": "preact/compat/client",
+        "react-dom/test-utils": "preact/test-utils"
+      }
+    },
+
     optimization: {
       // Keep the lazily-loaded editor as a single predictable file rather
       // than letting the default vendor split scatter it across chunk ids.
