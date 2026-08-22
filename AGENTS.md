@@ -10,7 +10,7 @@ Firefox Notes is a Firefox WebExtension that provides a sidebar for taking notes
 - **Sync**: `browser.storage.sync` (see `src/storage-sync.js`). The old Kinto + Firefox Accounts implementation has been deleted.
 - **Native App**: React Native Android companion app (in `/native/`), still on the old Kinto stack and not covered by these guidelines
 
-**Tech Stack**: JavaScript (ES6+), React 19 API via `preact/compat`, Redux 5, Webpack 5, SCSS, Node.js 18+
+**Tech Stack**: JavaScript (ES6+), React 19 API via `preact/compat`, Redux 5, Vite 8, SCSS, Node.js 18+
 
 ## Build/Lint/Test Commands
 
@@ -26,13 +26,13 @@ npm install          # Install dependencies (runs postinstall automatically)
 npm start            # Build and run extension in Firefox with watch mode
 npm start-nightly    # Run in Firefox Nightly
 npm start-deved      # Run in Firefox Developer Edition
-npm run webpack      # Build with webpack (one-time)
+npm run vite         # Build with Vite (one-time)
 ```
 
 ### Building
 
 ```bash
-npm run build        # Full production build (clean + webpack + web-ext)
+npm run build        # Full production build (locales + vite + web-ext)
 npm run clean        # Clean build artifacts
 npm run package      # Build and create addon.xpi
 ```
@@ -98,8 +98,8 @@ import { updateNote, createNote } from "../actions";
 
 | Type                      | Convention           | Example                                       |
 | ------------------------- | -------------------- | --------------------------------------------- |
-| Files (React components)  | PascalCase           | `Editor.js`, `ListPanel.js`                   |
-| Files (utilities/modules) | camelCase            | `utils.js`, `reducers.js`                     |
+| Files (React components)  | PascalCase `.jsx`    | `Editor.jsx`, `ListPanel.jsx`                 |
+| Files (utilities/modules) | camelCase `.js`      | `utils.js`, `reducers.js`                     |
 | Variables/Functions       | camelCase            | `formatFooterTime`, `getNoteSummary`          |
 | Classes                   | PascalCase           | `NoteTooLargeError`, `StorageLimitError`      |
 | Constants                 | SCREAMING_SNAKE_CASE | `SYNC_AUTHENTICATED`, `KINTO_LOADED`          |
@@ -196,8 +196,8 @@ src/
 ├── manifest.json          # WebExtension manifest
 └── sidebar/
     ├── app/
-    │   ├── app.js         # Entry point
-    │   ├── router.js      # Three-view router (no react-router)
+    │   ├── app.jsx        # Entry point
+    │   ├── router.jsx     # Three-view router (no react-router)
     │   ├── store.js       # Redux store
     │   ├── actions.js     # Redux action creators
     │   ├── reducers.js    # Redux reducers
@@ -207,24 +207,29 @@ src/
     └── static/scss/       # SCSS styles
 
 test/
-└── integration/           # Selenium integration tests
+└── integration/           # Selenium integration tests (native ESM, .mjs)
 ```
 
 There are no vendor directories. Everything third-party is bundled by
-webpack from node_modules.
+Vite from node_modules. `vite.config.mjs` also copies everything in `src/`
+that is not the bundled sidebar app into `build/`.
 
 ## Important Notes
 
 - **No TypeScript**: This project uses plain JavaScript with Babel
 - **Preact**: `react` and `react-dom` are aliased to `preact/compat` in
-  `webpack.config.js`. Write ordinary React code; the alias is the only
+  `vite.config.mjs`. Write ordinary React code; the alias is the only
   place Preact is mentioned.
 - **CKEditor is lazily loaded**: reach it through `utils/loadEditor.js`.
   Importing `ckeditor5` anywhere else pulls ~880 KB back into the bundle
   that every sidebar open must parse. Import it by *named* exports only:
   `import('ckeditor5')` defeats tree-shaking and drags in every plugin.
-- **The build is production by default**: `npm run webpack:watch` passes
+- **The build is production by default**: `npm run vite:watch` passes
   `--mode development` for source maps. Do not change the default.
+- **JSX lives in `.jsx` files**: Vite's parser keys JSX off the extension.
+  Putting JSX in a `.js` file is a parse error, not a warning.
+- **No Babel**: oxc handles JSX, and the integration tests are native ESM
+  (`.mjs`). Do not reintroduce a transpiler.
 - **Browser compatibility**: Firefox 115+ only (WebExtension)
 - **i18n**: Use `browser.i18n.getMessage('key')` for localized strings
 - **Formatting**: Run `npm run format` before committing

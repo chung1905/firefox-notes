@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-key */
 import React from 'react';
 import { connect } from 'react-redux';
 import { FROM_LIST_VIEW, FROM_IN_NOTE } from '../utils/constants';

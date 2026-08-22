@@ -1,6 +1,6 @@
-const {By, until, Key} = require('selenium-webdriver');
-const { createLogger, transports } = require('winston');
-const { format } = require('logform');
+import { By, until, Key } from 'selenium-webdriver';
+import { createLogger, transports } from 'winston';
+import { format } from 'logform';
 const logger = createLogger({
   level: process.env.UI_TEST_LOGGING || 'silent',
   format: format.combine(
