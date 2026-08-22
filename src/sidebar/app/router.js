@@ -1,9 +1,27 @@
 import React from 'react';
 
-import { HashRouter, Route } from 'react-router-dom';
-
 import ListPanel from './components/ListPanel';
 import EditorPanel from './components/EditorPanel';
+
+// The sidebar has three views, no URL bar and no back button, so
+// react-router-dom (plus its history dependency) was 12 KB gzipped spent on
+// a variable. Paths are kept as-is, and the `history` and `match` props keep
+// their shapes, so the panels are unchanged.
+const NOTE_WITH_ID = /^\/note\/(.+)$/;
+
+function parsePath(path) {
+  const withId = NOTE_WITH_ID.exec(path);
+
+  if (withId) {
+    return { view: 'note', id: withId[1] };
+  }
+
+  if (path === '/note') {
+    return { view: 'note', id: null };
+  }
+
+  return { view: 'list', id: null };
+}
 
 const styles = {
   container: {
@@ -14,15 +32,37 @@ const styles = {
 };
 
 class Router extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = parsePath('/');
+    this.history = {
+      push: (path) => this.setState(parsePath(path)),
+    };
+  }
+
   render() {
-    return (
-      <HashRouter>
+    const { view, id } = this.state;
+
+    if (view === 'list') {
+      return (
         <div style={styles.container}>
-          <Route exact path="/" component={ListPanel} />
-          <Route exact path="/note" component={EditorPanel} />
-          <Route exact path="/note/:id" component={EditorPanel} />
+          <ListPanel history={this.history} />
         </div>
-      </HashRouter>
+      );
+    }
+
+    return (
+      <div style={styles.container}>
+        <EditorPanel
+          // Matches the old routing, where /note and /note/:id were separate
+          // Routes and moving between them remounted the panel, while moving
+          // between two ids did not.
+          key={id ? 'note' : 'new-note'}
+          history={this.history}
+          match={{ params: { id } }}
+        />
+      </div>
     );
   }
 }
