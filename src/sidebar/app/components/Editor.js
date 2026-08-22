@@ -1,11 +1,8 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { ClassicEditor } from 'ckeditor5';
 
-import 'ckeditor5/ckeditor5.css';
-
-import INITIAL_CONFIG from '../data/editorConfig';
+import loadEditor from '../utils/loadEditor';
 import { SEND_TO_NOTES, FROM_BLANK_NOTE } from '../utils/constants';
 import { customizeEditor } from '../utils/editor';
 
@@ -26,6 +23,7 @@ class Editor extends React.Component {
     this.editor = null; // Editor object
     this.ignoreChange = false;
     this.delayUpdateNote = null;
+    this.isUnmounted = false;
 
     this.sendToNoteListener = (eventData) => {
       if (eventData.action === SEND_TO_NOTES) {
@@ -41,8 +39,15 @@ class Editor extends React.Component {
   }
 
   componentDidMount() {
-    ClassicEditor.create(this.node, INITIAL_CONFIG)
+    loadEditor(this.node)
       .then((editor) => {
+        if (!editor) {
+          return;
+        }
+        if (this.isUnmounted) {
+          editor.destroy();
+          return;
+        }
         this.editor = editor;
 
         chrome.runtime.onMessage.addListener(this.sendToNoteListener);
@@ -118,6 +123,7 @@ class Editor extends React.Component {
   }
 
   componentWillUnmount() {
+    this.isUnmounted = true;
     chrome.runtime.onMessage.removeListener(this.sendToNoteListener);
 
     if (this.editor) {

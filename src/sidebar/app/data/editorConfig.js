@@ -8,10 +8,10 @@ import {
   Strikethrough,
 } from 'ckeditor5';
 
-// Only the features Notes actually exposes in its toolbar. The old prebuilt
-// classic build also carried image upload, CKFinder, CloudServices,
-// EasyImage, media embed, tables, links, block quote, indent and
-// paste-from-office, none of which were reachable from the UI.
+// Only the features Notes exposes in its toolbar. The old prebuilt classic
+// build also carried image upload, CKFinder, CloudServices, EasyImage, media
+// embed, tables, links, block quote, indent and paste-from-office, none of
+// which were reachable from the UI.
 const config = {
   licenseKey: 'GPL',
   plugins: [Essentials, Paragraph, Heading, Bold, Italic, Strikethrough, List],

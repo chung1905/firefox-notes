@@ -23,7 +23,16 @@ module.exports = (env, argv) => {
       // build to the extension src vendor directory
       path: path.resolve(__dirname, "build"),
       filename: path.join("sidebar", "app.js"),
+      // Lazily-loaded chunks (the editor) sit next to app.js so the
+      // default 'auto' publicPath resolves them under moz-extension://.
+      chunkFilename: path.join("sidebar", "[name].js"),
       clean: true
+    },
+
+    optimization: {
+      // Keep the lazily-loaded editor as a single predictable file rather
+      // than letting the default vendor split scatter it across chunk ids.
+      splitChunks: false
     },
 
     plugins: [
