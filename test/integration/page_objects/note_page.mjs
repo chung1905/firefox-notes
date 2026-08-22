@@ -1,5 +1,5 @@
-import BasePage from './base_page';
-import ListPage from './list_page';
+import BasePage from './base_page.mjs';
+import ListPage from './list_page.mjs';
 
 export default class NotePage extends BasePage {
 

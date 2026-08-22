@@ -1,9 +1,9 @@
 import { Builder, By, until } from 'selenium-webdriver';
 
 import * as chai from 'chai';
-import * as firefox from 'selenium-webdriver/firefox';
+import * as firefox from 'selenium-webdriver/firefox.js';
 
-import ListPage from './page_objects/list_page';
+import ListPage from './page_objects/list_page.mjs';
 
 const assert = chai.assert;
 const expect = chai.expect;
