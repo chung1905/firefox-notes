@@ -1,8 +1,8 @@
-@import 'ckeditor';
-@import 'list';
-@import 'menu';
-@import 'header';
-@import 'footer';
+@use 'ckeditor';
+@use 'list';
+@use 'menu';
+@use 'header';
+@use 'footer';
 
 * {
   box-sizing: border-box;
