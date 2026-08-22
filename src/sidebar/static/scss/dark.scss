@@ -1,0 +1,264 @@
+// Dark theme. Previously a standalone stylesheet that utils/theme.js appended
+// as a <link> after DOMContentLoaded, which meant dark-theme users saw a flash
+// of the light theme on every sidebar open. It is now part of the bundle and
+// switched by the data-theme attribute on <html>, so applying it costs a style
+// recalculation rather than a stylesheet fetch and parse.
+// app.js imports this after styles.scss to keep the original cascade order.
+[data-theme='dark'] {
+    --main-bg-color: hsla(221deg, 14%, 25%, 1);
+    --main-offset-bg-color: hsla(221deg, 14%, 24%, 1);
+    --main-bg-hover-color: hsla(221deg, 14%, 22%, 1);
+    --main-bg-focus-color: hsla(221deg, 14%, 19%, 1);
+    --main-bg-active-color: hsla(221deg, 14%, 19%, 1);
+
+    --primary-font-color: hsla(221deg, 14%, 90%, 1);
+    --secondary-font-color: hsla(221deg, 14%, 60%, 1);
+    --border-color: hsla(221deg, 14%, 45%, 1);
+
+  body {
+    background-color: var(--main-bg-color);
+  }
+
+  #notes .ck-toolbar {
+    background-color: #272b35;
+  }
+
+  #enable-sync svg path {
+    fill: #e6e6e6;
+  }
+
+  .animateSyncIcon #enable-sync svg path,
+  .syncingLayout > div:hover #enable-sync svg path {
+    fill: #4e92dd;
+  }
+
+  #footer-buttons.warning #enable-sync svg path {
+    fill: #000000 !important;
+  }
+
+  #enable-sync:hover {
+    background-color: #323744;
+  }
+
+  footer button {
+    background: none !important;
+    color: #e6e6e6 !important;
+  }
+  footer button svg path {
+    fill: #e6e6e6 !important;
+  }
+  footer.warning button.fullWidth {
+    background-color: rgb(255, 236, 173);
+    color: black !important;
+  }
+  footer.warning button svg path {
+    fill: black !important;
+  }
+
+  .photon-menu > button svg path {
+    fill: #e6e6e6 !important;
+  }
+
+  .warning .photon-menu > button svg path {
+    fill: black !important;
+  }
+
+  .photon-menu ul button {
+    color: black !important;
+  }
+
+  .photon-menu ul button:hover,
+  .photon-menu ul button:active,
+  .photon-menu ul button:focus {
+    background: rgba(128, 128, 128, 0.2) !important;
+  }
+
+  .photon-menu .iconBtn {
+    color: #e6e6e6 !important;
+  }
+
+  #footer-buttons div:first-child.isClickable button {
+    background: none;
+    color: #e6e6e6 !important;
+  }
+
+  #footer-buttons.savingLayout div:first-child.isClickable button:focus,
+  .photon-menu .iconBtn:focus {
+    background-color: #272b35;
+  }
+  #footer-buttons.savingLayout div:first-child.isClickable button:hover,
+  .photon-menu .iconBtn:hover {
+    background-color: #323744;
+  }
+  #footer-buttons.savingLayout div:first-child.isClickable button:active,
+  .photon-menu .iconBtn:active {
+    background-color: #3d4352;
+  }
+
+  #footer-buttons.warning div:first-child.isClickable button {
+    color: black !important;
+  }
+  /* End Dropdown menu */
+
+  /* ck-editor */
+  ::-moz-selection {
+    background-color: #5675b9;
+    color: #fff;
+  }
+
+  .ck.ck-editor__main > .ck-editor__editable {
+    background-color: #272b35;
+    color: var(--primary-font-color);
+  }
+
+  #notes .ck-editor__top {
+    border-color: var(--border-color);
+    background: var(--main-bg-color);
+  }
+
+  #notes .ck-toolbar *,
+  #notes .ck-toolbar {
+    color: #e6e6e6;
+    background: var(--main-bg-color);
+  }
+
+  #notes .ck-toolbar button.ck-on *,
+  #notes .ck-toolbar button:active * {
+    color: #0080ff;
+  }
+
+  #notes .ck-button.ck-on {
+    background: #323744;
+  }
+
+  #notes .ck-toolbar .ck-button:focus:not(.ck-disabled),
+  #notes .ck-toolbar .ck-button:hover:not(.ck-disabled),
+  #notes .ck-toolbar a.ck-button:focus:not(.ck-disabled),
+  #notes .ck-toolbar a.ck-button:hover:not(.ck-disabled) {
+    background: #323744;
+  }
+
+  #notes .ck-toolbar .ck-dropdown__button:hover:not(.ck-disabled) {
+    background: #323744;
+  }
+
+  #notes .ck-toolbar .ck-button__label {
+    background: transparent;
+  }
+
+  #notes .ck-toolbar .ck-button .ck-icon,
+  #notes .ck-toolbar a.ck-button .ck-icon {
+    background: transparent;
+  }
+
+  #notes .ck-toolbar .ck-tooltip.ck-tooltip_s {
+    background: transparent;
+  }
+
+  #notes .ck-toolbar button .ck-tooltip__text {
+    border: solid thin #1c1f26;
+    color: #e6e6e6;
+  }
+
+  #notes .ck-toolbar .ck-tooltip.ck-tooltip_s .ck-tooltip__text::after {
+    border-color: transparent transparent #1c1f26;
+  }
+
+  #notes .ck-editor__main a {
+    color: #0080ff;
+  }
+
+  #notes .ck-toolbar .ck-list__item:hover {
+    background-color: #323744;
+  }
+
+  #notes .ck-toolbar .ck-list__item_active {
+    background-color: #0073e5;
+    color: #e6e6e6;
+  }
+
+  #notes .ck-toolbar .ck-list__item_active:hover {
+    background-color: #0080ff;
+  }
+
+  #notes .drag-n-drop-focus,
+  #notes .drag-n-drop-focus .ck-editor__editable {
+    border: 1px solid #ffff00;
+    background-color: #008080;
+  }
+
+  .listView ul li button p,
+  .listView ul li button p span {
+    color: var(--secondary-font-color);
+  }
+
+  .listView ul li button p strong {
+    color: var(--primary-font-color);
+  }
+
+  header,
+  footer,
+  .btn.fullWidth.borderBottom {
+    background: var(--main-bg-color) !important;
+    color: var(--primary-font-color);
+    border-color: var(--border-color);
+  }
+
+  footer {
+    background: none !important;
+  }
+
+  header button.iconBtn svg path,
+  footer button.iconBtn svg path {
+    fill: var(--primary-font-color) !important;
+  }
+
+  .btn.fullWidth.borderBottom svg path {
+    fill: var(--primary-font-color);
+  }
+
+  .btn.fullWidth.borderBottom:hover,
+  footer#footer-buttons button.fullWidth:hover {
+    background: var(--main-bg-hover-color) !important;
+  }
+
+  .btn.fullWidth.borderBottom:focus,
+  footer#footer-buttons:not(.warning) button.fullWidth:focus {
+    background: var(--main-bg-focus-color) !important;
+  }
+
+  .btn.fullWidth.borderBottom:active,
+  footer#footer-buttons button.fullWidth:active {
+    background: var(--main-bg-active-color) !important;
+  }
+
+  /* Change syncing footer text to secondary color during and post syncing  */
+  footer#footer-buttons.animateSyncIcon div.btnWrapper,
+  footer#footer-buttons div.btnWrapper p {
+    color: var(--secondary-font-color);
+  }
+  /* Change syncing footer icon color to blue when syncing */
+  footer#footer-buttons.animateSyncIcon button#enable-sync svg path {
+    fill: var(--secondary-font-color) !important;
+  }
+
+  footer#footer-buttons.warning {
+    background-color: rgb(255, 236, 173) !important;
+    color: black;
+  }
+
+  footer#footer-buttons.warning button.fullWidth:hover,
+  footer#footer-buttons.warning button.fullWidth:active {
+    background: none !important;
+  }
+
+  button.iconBtn:hover {
+    background: rgba(12, 12, 13, 0.1) !important;
+  }
+  button.iconBtn:focus {
+    background: none !important;
+  }
+  button.iconBtn:active {
+    background: rgba(12, 12, 13, 0.2) !important;
+  }
+}

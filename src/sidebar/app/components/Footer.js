@@ -1,7 +1,5 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
-import classNames from 'classnames';
 
 import SyncIcon from './icons/SyncIcon';
 import MoreIcon from './icons/MoreIcon';
@@ -41,9 +39,9 @@ class Footer extends React.Component {
 
     this.getFooterState = (state) => {
       if (state.sync.error) {
-        const errorState = this.STATES.ERROR;
-        errorState.text = () => state.sync.error;
-        return errorState;
+        // Return a copy: mutating this.STATES.ERROR leaked the message into
+        // every later render.
+        return { ...this.STATES.ERROR, text: () => state.sync.error };
       } else if (state.sync.isSyncing) {
         return this.STATES.SYNCING;
       } else if (state.sync.lastSynced) {
@@ -52,8 +50,6 @@ class Footer extends React.Component {
         return this.STATES.READY;
       }
     };
-
-    this.currentState = this.getFooterState(props.state);
 
     // Event used on window.addEventListener
     this.onCloseListener = () => {
@@ -124,24 +120,23 @@ class Footer extends React.Component {
     };
 
     this.triggerSync = () => {
-      if (!this.currentState.isClickable) return;
+      if (!this.getFooterState(this.props.state).isClickable) return;
       browser.runtime.sendMessage({
         action: 'kinto-sync',
       });
     };
   }
 
-  componentWillReceiveProps(nextProps) {
-    this.currentState = this.getFooterState(nextProps.state);
-  }
-
   render() {
     if (!this.props.state.kinto.isLoaded) return '';
 
-    const footerClass = classNames({
-      warning: this.currentState.yellowBackground,
-      animateSyncIcon: this.currentState.animateSyncIcon,
-    });
+    const currentState = this.getFooterState(this.props.state);
+    const footerClass = [
+      currentState.yellowBackground ? 'warning' : '',
+      currentState.animateSyncIcon ? 'animateSyncIcon' : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
 
     this.buttons = [];
 
@@ -152,33 +147,33 @@ class Footer extends React.Component {
         className={footerClass}
       >
         <div id="footerButtons">
-          {this.currentState.yellowBackground ? (
+          {currentState.yellowBackground ? (
             <button
               className="fullWidth"
-              title={this.currentState.text ? this.currentState.text() : ''}
+              title={currentState.text ? currentState.text() : ''}
               onClick={(e) => this.triggerSync(e)}
             >
               <WarningIcon />
-              <span>{this.currentState.text()}</span>
+              <span>{currentState.text()}</span>
             </button>
           ) : (
             <div
               className={
-                this.currentState.isClickable
+                currentState.isClickable
                   ? 'isClickable btnWrapper'
                   : 'btnWrapper'
               }
             >
               <button
                 id="trigger-sync"
-                disabled={!this.currentState.isClickable}
+                disabled={!currentState.isClickable}
                 onClick={(e) => this.triggerSync(e)}
                 title={browser.i18n.getMessage('syncNotes') || 'Sync notes'}
                 className="iconBtn"
               >
                 <SyncIcon />
               </button>
-              <p>{this.currentState.text()}</p>
+              <p>{currentState.text()}</p>
             </div>
           )}
 
@@ -220,10 +215,5 @@ function mapStateToProps(state) {
     state,
   };
 }
-
-Footer.propTypes = {
-  state: PropTypes.object.isRequired,
-  dispatch: PropTypes.func.isRequired,
-};
 
 export default connect(mapStateToProps)(Footer);

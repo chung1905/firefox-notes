@@ -1,10 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
 
-import INITIAL_CONFIG from '../data/editorConfig';
+import loadEditor from '../utils/loadEditor';
 import { SEND_TO_NOTES, FROM_BLANK_NOTE } from '../utils/constants';
-import { getPadStats, customizeEditor } from '../utils/editor';
+import { customizeEditor } from '../utils/editor';
 
 import { updateNote, createNote, deleteNote, setFocusedNote } from '../actions';
 
@@ -17,12 +16,13 @@ const styles = {
 };
 
 class Editor extends React.Component {
-  constructor(props, context) {
+  constructor(props) {
     super(props);
     this.props = props;
     this.editor = null; // Editor object
     this.ignoreChange = false;
     this.delayUpdateNote = null;
+    this.isUnmounted = false;
 
     this.sendToNoteListener = (eventData) => {
       if (eventData.action === SEND_TO_NOTES) {
@@ -38,8 +38,15 @@ class Editor extends React.Component {
   }
 
   componentDidMount() {
-    ClassicEditor.create(this.node, INITIAL_CONFIG)
+    loadEditor(this.node)
       .then((editor) => {
+        if (!editor) {
+          return;
+        }
+        if (this.isUnmounted) {
+          editor.destroy();
+          return;
+        }
         this.editor = editor;
 
         chrome.runtime.onMessage.addListener(this.sendToNoteListener);
@@ -85,11 +92,6 @@ class Editor extends React.Component {
                 }
               }
               this.ignoreChange = false;
-
-              chrome.runtime.sendMessage({
-                action: 'metrics-changed',
-                context: getPadStats(editor),
-              });
             }
             this.delayUpdateNote = null;
           }, 50);
@@ -101,25 +103,26 @@ class Editor extends React.Component {
   }
 
   // This is triggered when redux update state.
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     if (
       this.editor &&
-      this.props.note &&
-      this.editor.getData() !== nextProps.note.content
+      prevProps.note &&
+      this.editor.getData() !== this.props.note.content
     ) {
-      if (nextProps.note.id !== this.props.note.id) {
+      if (this.props.note.id !== prevProps.note.id) {
         this.ignoreChange = true;
       }
       if (!this.delayUpdateNote) {
         // If no delay waiting, we apply modification
         this.ignoreChange = true;
-        this.editor.setData(nextProps.note.content || '<p></p>');
+        this.editor.setData(this.props.note.content || '<p></p>');
         this.editor.editing.view.focus();
       }
     }
   }
 
   componentWillUnmount() {
+    this.isUnmounted = true;
     chrome.runtime.onMessage.removeListener(this.sendToNoteListener);
 
     if (this.editor) {
@@ -157,13 +160,5 @@ function mapStateToProps(state) {
     state,
   };
 }
-
-Editor.propTypes = {
-  state: PropTypes.object.isRequired,
-  history: PropTypes.object.isRequired,
-  origin: PropTypes.string.isRequired,
-  note: PropTypes.object,
-  dispatch: PropTypes.func.isRequired,
-};
 
 export default connect(mapStateToProps)(Editor);

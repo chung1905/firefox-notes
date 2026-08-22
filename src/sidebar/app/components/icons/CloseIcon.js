@@ -1,6 +1,6 @@
 import React from 'react';
 
-function CloseIcon(props) {
+function CloseIcon() {
   return (
     <svg
       version="1.1"

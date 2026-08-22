@@ -16,8 +16,7 @@ import {
 
 import INITIAL_CONTENT from './data/initialContent';
 import { getFirstNonEmptyElement, formatFilename } from './utils/utils';
-import { v4 as uuid4 } from 'uuid';
-import * as FileSaver from 'file-saver';
+import { saveFile } from './utils/download';
 
 /*
  * action creators
@@ -75,13 +74,15 @@ export function disconnect() {
   return { type: DISCONNECTED };
 }
 
-export function createdNote(id, content, lastModified) {
+// The note was already added optimistically by the createNote thunk, so this
+// only acknowledges the round-trip. The reducer ignores it without an id.
+export function createdNote() {
   return { type: CREATE_NOTE, isSyncing: false };
 }
 
 export function createNote(content = '', origin, id) {
   if (!id) {
-    id = uuid4();
+    id = crypto.randomUUID();
   }
 
   // Send create request to storage.sync
@@ -94,8 +95,8 @@ export function createNote(content = '', origin, id) {
   });
 
   // Return id to callback using promises
-  const fct = (dispatch, getState) => {
-    return new Promise((resolve, reject) => {
+  const fct = (dispatch) => {
+    return new Promise((resolve) => {
       dispatch({ type: CREATE_NOTE, id, content });
       resolve(id);
     });
@@ -146,11 +147,8 @@ export function exportHTML(content) {
     { type: exportFileType },
   );
 
-  FileSaver.saveAs(data, exportFileName);
+  saveFile(data, exportFileName);
 
-  chrome.runtime.sendMessage({
-    action: 'metrics-export',
-  });
   return { type: EXPORT_HTML, content };
 }
 

@@ -1,6 +1,5 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
 
 import INITIAL_CONTENT from '../data/initialContent';
 import {
@@ -37,10 +36,12 @@ class ListPanel extends React.Component {
 
     this.checkInitialContent = (state) => {
       if (
+        !this.hasRequestedWelcomeNote &&
         state.sync.welcomePage &&
         state.kinto.isLoaded &&
         state.notes.length === 0
       ) {
+        this.hasRequestedWelcomeNote = true;
         this.props
           .dispatch(createNote(INITIAL_CONTENT, FROM_LIST_VIEW, 'initialNote'))
           .then((id) => {
@@ -77,7 +78,7 @@ class ListPanel extends React.Component {
     };
   }
 
-  componentWillMount() {
+  componentDidMount() {
     chrome.runtime.onMessage.addListener(this.sendToNoteListener);
 
     // If user is not logged, and has no notes, we create initial content for him
@@ -85,9 +86,7 @@ class ListPanel extends React.Component {
     this.checkInitialContent(this.props.state);
 
     this.props.dispatch(setFocusedNote());
-  }
 
-  componentDidMount() {
     // Disable right clicks
     // Refs: https://stackoverflow.com/a/737043/186202
     window.addEventListener('keydown', this.handleKeyPress);
@@ -109,10 +108,10 @@ class ListPanel extends React.Component {
     clearTimeout(this.timer);
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate() {
     // If user is not logged, and has no notes, we create initial content for him
     // and redirect to it.
-    this.checkInitialContent(nextProps.state);
+    this.checkInitialContent(this.props.state);
   }
 
   render() {
@@ -128,7 +127,7 @@ class ListPanel extends React.Component {
           <NewIcon /> <span>{browser.i18n.getMessage('newNote')}</span>
         </button>
         <ul>
-          {this.props.state.notes
+          {Array.from(this.props.state.notes)
             .sort((a, b) => {
               if (a.lastModified.getTime() !== b.lastModified.getTime()) {
                 return a.lastModified.getTime() < b.lastModified.getTime()
@@ -182,11 +181,5 @@ function mapStateToProps(state) {
     state,
   };
 }
-
-ListPanel.propTypes = {
-  state: PropTypes.object.isRequired,
-  history: PropTypes.object.isRequired,
-  dispatch: PropTypes.func.isRequired,
-};
 
 export default connect(mapStateToProps)(ListPanel);

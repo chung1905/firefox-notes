@@ -41,45 +41,39 @@ function getFirstNonEmptyElement(parentElement) {
   );
 
   // search for first child element that is not empty and return it
-  const nonEmptyChild = parentElementChildrenArray.find((el) => {
-    if (el.textContent.trim() !== '') {
-      return el.textContent.trim();
-    }
-  });
-  return nonEmptyChild;
+  return parentElementChildrenArray.find((el) => el.textContent.trim() !== '');
 }
 
-function getFirstLineFromContent(content) {
+/**
+ * Parses a note's HTML once and returns both list-view summary lines.
+ *
+ * These used to be two exported functions, and stripHtmlWithoutFirstLine
+ * called getFirstLineFromContent internally, so rendering a note cost three
+ * innerHTML parses of its full content -- on every keystroke pause, inside a
+ * reducer.
+ *
+ * @param {string} content
+ * @returns {{firstLine: ?string, secondLine: ?string}}
+ */
+function getNoteSummary(content) {
   // assign contents to container element for later parsing
   const parentElement = document.createElement('div');
   parentElement.innerHTML = content.replace(/<\/p>|<\/li>/gi, '&nbsp;');
 
   const element = getFirstNonEmptyElement(parentElement);
+  const firstLine = element
+    ? element.textContent.trim().substring(0, 250) || null
+    : null;
 
-  if (!element) {
-    return null;
+  let secondLine = null;
+  const text = parentElement.textContent;
+
+  if (text && firstLine && text.trim().startsWith(firstLine.trim())) {
+    const rest = text.trim().substr(firstLine.trim().length);
+    secondLine = rest ? rest.trim().substring(0, 250) : rest;
   }
 
-  return element.textContent.trim().substring(0, 250) || null;
-}
-
-function stripHtmlWithoutFirstLine(content) {
-  // assign contents to container element for later parsing
-  const parentElement = document.createElement('div');
-  parentElement.innerHTML = content.replace(/<\/p>|<\/li>/gi, '&nbsp;');
-
-  let res = null;
-  const firstLine = getFirstLineFromContent(content);
-
-  if (
-    parentElement.textContent &&
-    firstLine &&
-    parentElement.textContent.trim().startsWith(firstLine.trim())
-  ) {
-    res = parentElement.textContent.trim().substr(firstLine.trim().length);
-  }
-
-  return res ? res.trim().substring(0, 250) : res;
+  return { firstLine, secondLine };
 }
 
 /**
@@ -109,7 +103,6 @@ export {
   formatFooterTime,
   getFirstNonEmptyElement,
   formatFilename,
-  getFirstLineFromContent,
-  stripHtmlWithoutFirstLine,
+  getNoteSummary,
   formatLastModified,
 };

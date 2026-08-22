@@ -1,6 +1,5 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
 
 import ArrowLeftIcon from './icons/ArrowLeftIcon';
 import MoreIcon from './icons/MoreIcon';
@@ -23,7 +22,7 @@ class Header extends React.Component {
     };
 
     // Open and close menu
-    this.toggleMenu = (e) => {
+    this.toggleMenu = () => {
       if (this.menu && this.menu.classList.contains('close')) {
         this.menu.classList.replace('close', 'open');
         setTimeout(() => {
@@ -76,9 +75,6 @@ class Header extends React.Component {
 
     this.giveFeedbackCallback = (e) => {
       e.preventDefault();
-      chrome.runtime.sendMessage({
-        action: 'metrics-give-feedback',
-      });
       browser.runtime.getBrowserInfo().then((info) => {
         browser.tabs.create({
           url: `${SURVEY_PATH}&ver=${browser.runtime.getManifest().version}&release=${info.version}`,
@@ -118,7 +114,7 @@ class Header extends React.Component {
           className="photon-menu close bottom left"
           ref={(menu) => (this.menu = menu)}
         >
-          <button className="iconBtn" onClick={(e) => this.toggleMenu(e)}>
+          <button className="iconBtn" onClick={this.toggleMenu}>
             <MoreIcon />
           </button>
           <div className="wrapper">
@@ -178,13 +174,5 @@ function mapStateToProps(state) {
     state,
   };
 }
-
-Header.propTypes = {
-  state: PropTypes.object.isRequired,
-  history: PropTypes.object.isRequired,
-  note: PropTypes.object,
-  onNewNoteEvent: PropTypes.func.isRequired,
-  dispatch: PropTypes.func.isRequired,
-};
 
 export default connect(mapStateToProps)(Header);

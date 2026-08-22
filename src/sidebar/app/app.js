@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 
 import store from './store';
@@ -10,6 +10,9 @@ import Footer from './components/Footer';
 
 import './utils/theme.js'; // addListener theming
 import '../static/scss/styles.scss';
+// After styles.scss: @use may not appear mid-file, so the cascade order the
+// dark theme depends on is expressed here instead.
+import '../static/scss/dark.scss';
 
 // AddListener on chrome.runtime.onMessage
 import './onMessage.js';
@@ -41,14 +44,13 @@ browser.storage.local.get().then((result) => {
   }
 
   // Render root DOM element
-  ReactDOM.render(
+  createRoot(document.getElementById('notes')).render(
     <Provider store={store}>
       <div style={styles.container}>
         <Router />
         <Footer />
       </div>
     </Provider>,
-    document.getElementById('notes'),
   );
 });
 

@@ -21,7 +21,7 @@ git clone https://github.com/mozilla/notes.git
 git clone https://github.com/[yourusername]/notes.git
 ```
 * Step 2: Navigate to the root of the directory you cloned and run:
-> Make sure to use Node.js 8+.
+> Make sure to use Node.js 18+.
 
 | Command         | Description                               |
 |-----------------|-------------------------------------------|
@@ -29,15 +29,12 @@ git clone https://github.com/[yourusername]/notes.git
 | `npm run build` | Builds the application as a Web Extension.|
 | `npm start`     | Launches Firefox with the Web Extension.  |
 
-You can also open the `test/index.html` file in your browser to run the automated tests.
-
 ## WebExtension Permissions
 
 | Permission      | Description                                                                    |
 |-----------------|--------------------------------------------------------------------------------|
 | `contextMenus`  | Used for "Send to Note" feature, sends text from pages to the Notes sidebar.   |
-| `storage`       | Storage for Notes.                                                             |
-| `identity`      | OAuth login to Firefox Accounts to sync your notes.                            |
+| `storage`       | Storage for Notes, and syncing them via `storage.sync`.                        |
 
 ## Release
 
@@ -50,7 +47,7 @@ Firefox Notes localization is managed via [Pontoon](https://pontoon.mozilla.org/
 ## Licenses
 
 * [Mozilla Public License Version 2.0](LICENSE)
-* [CKEditor Text Editor License](https://github.com/ckeditor/ckeditor5/blob/master/LICENSE.md) used under MPL licence
+* [CKEditor 5](https://github.com/ckeditor/ckeditor5/blob/master/LICENSE.md), used under its GPL licence (`licenseKey: 'GPL'`)
 
 ## Design
 

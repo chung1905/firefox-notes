@@ -6,11 +6,11 @@ This document provides guidelines for AI coding agents working in this repositor
 
 Firefox Notes is a Firefox WebExtension that provides a sidebar for taking notes. It includes:
 
-- **WebExtension**: React 16.2 + Redux sidebar with CKEditor 5 rich text editing
-- **Sync**: Kinto-based sync with Firefox Accounts (FxA) OAuth + encryption
-- **Native App**: React Native Android companion app (in `/native/`)
+- **WebExtension**: React-API sidebar (rendered by Preact) + Redux, with CKEditor 5 rich text editing
+- **Sync**: `browser.storage.sync` (see `src/storage-sync.js`). The old Kinto + Firefox Accounts implementation has been deleted.
+- **Native App**: React Native Android companion app (in `/native/`), still on the old Kinto stack and not covered by these guidelines
 
-**Tech Stack**: JavaScript (ES6+), React 16.2, Redux 3.7, Webpack 5, SCSS, Node.js 18+
+**Tech Stack**: JavaScript (ES6+), React 19 API via `preact/compat`, Redux 5, Webpack 5, SCSS, Node.js 18+
 
 ## Build/Lint/Test Commands
 
@@ -49,30 +49,19 @@ npm run format       # Format with Prettier (single quotes)
 ### Testing
 
 ```bash
-npm test             # Run all tests (unit + integration)
-npm run test:karma   # Run unit tests only (Karma + Mocha) - requires Node 8
+npm test             # Run all tests
 npm run test:ui      # Run integration tests (Selenium + Mocha)
 ```
 
+**There are currently no unit tests.** The Karma suite covered only the
+deleted Kinto sync and was removed with it; `src/storage-sync.js` has never
+had any. New unit tests should use a current runner (Vitest or
+web-test-runner), not Karma.
+
 ### Running a Single Test
 
-Tests use Mocha. To run a single test, use `.only`:
-
-```javascript
-// In test/unit/main.test.js or test/integration/testFirefoxWebext.js
-describe.only("specific suite", function () {
-  it("test case", function () {
-    /* ... */
-  });
-});
-
-// Or for a single test case:
-it.only("specific test", function () {
-  /* ... */
-});
-```
-
-Then run `npm run test:karma` (unit) or `npm run test:ui` (integration).
+Integration tests use Mocha, so `describe.only` / `it.only` work, then run
+`npm run test:ui`.
 
 ## Code Style Guidelines
 
@@ -92,16 +81,17 @@ Then run `npm run test:karma` (unit) or `npm run test:ui` (integration).
 // React and external libraries first
 import React from "react";
 import { connect } from "react-redux";
-import PropTypes from "prop-types";
 
 // Local modules with relative paths
-import INITIAL_CONFIG from "../data/editorConfig";
+import loadEditor from "../utils/loadEditor";
 import { SEND_TO_NOTES, FROM_BLANK_NOTE } from "../utils/constants";
 import { updateNote, createNote } from "../actions";
 ```
 
 - Use ES6 imports in source files
 - Use CommonJS `require()` in Node scripts and tests
+- Never add a static `import ... from 'ckeditor5'` outside
+  `utils/editorBundle.js`
 - Destructure named exports: `import { connect } from 'react-redux';`
 
 ### Naming Conventions
@@ -110,8 +100,8 @@ import { updateNote, createNote } from "../actions";
 | ------------------------- | -------------------- | --------------------------------------------- |
 | Files (React components)  | PascalCase           | `Editor.js`, `ListPanel.js`                   |
 | Files (utilities/modules) | camelCase            | `utils.js`, `reducers.js`                     |
-| Variables/Functions       | camelCase            | `formatFooterTime`, `syncKinto`               |
-| Classes                   | PascalCase           | `JWETransformer`, `BrowserStorageCredentials` |
+| Variables/Functions       | camelCase            | `formatFooterTime`, `getNoteSummary`          |
+| Classes                   | PascalCase           | `NoteTooLargeError`, `StorageLimitError`      |
 | Constants                 | SCREAMING_SNAKE_CASE | `SYNC_AUTHENTICATED`, `KINTO_LOADED`          |
 | Redux action types        | SCREAMING_SNAKE_CASE | `CREATE_NOTE`, `UPDATE_NOTE`                  |
 | Redux action creators     | camelCase            | `createNote()`, `updateNote()`                |
@@ -119,21 +109,17 @@ import { updateNote, createNote } from "../actions";
 ### React Patterns
 
 ```javascript
-// Class components (no hooks - React 16.2 era)
+// Class components. Hooks are available (React 19 API), but the existing
+// components are classes; do not mix styles within a component.
 class Editor extends React.Component {
-  constructor(props, context) {
+  constructor(props) {
     super(props);
-    this.props = props;
   }
   // ...
 }
 
-// PropTypes for type checking
-Editor.propTypes = {
-  state: PropTypes.object.isRequired,
-  dispatch: PropTypes.func.isRequired,
-  note: PropTypes.object,
-};
+// No PropTypes: React 19 removed runtime prop checking and no longer ships
+// the prop-types package. react/prop-types is off in ESLint.
 
 // Connect to Redux store
 export default connect(mapStateToProps)(Editor);
@@ -150,7 +136,9 @@ const styles = {
 ### Redux Patterns
 
 ```javascript
-// Action creator returning plain object
+// Action creator returning plain object. Note the kinto* names are legacy:
+// the message strings are kept for compatibility, the transport is
+// storage.sync.
 export function kintoLoad(notes) {
   return { type: KINTO_LOADED, notes };
 }
@@ -173,7 +161,7 @@ return Object.assign({}, state, { notes: action.notes });
 
 ```javascript
 // Async operations with .catch()
-ClassicEditor.create(this.node, INITIAL_CONFIG)
+loadEditor(this.node)
   .then((editor) => {
     /* ... */
   })
@@ -195,10 +183,7 @@ browser.windows.getCurrent({ populate: true }).then((windowInfo) => {
 });
 
 // Use chrome.runtime for cross-script messaging
-chrome.runtime.sendMessage({
-  action: "metrics-changed",
-  context: getPadStats(editor),
-});
+chrome.runtime.sendMessage({ action: "editor-ready" });
 chrome.runtime.onMessage.addListener(this.sendToNoteListener);
 ```
 
@@ -206,31 +191,40 @@ chrome.runtime.onMessage.addListener(this.sendToNoteListener);
 
 ```
 src/
-├── background.js          # Background script (messaging, auth)
-├── sync.js                # Kinto sync & encryption
+├── background.js          # Background script (messaging)
+├── storage-sync.js        # browser.storage.sync wrapper
 ├── manifest.json          # WebExtension manifest
-├── sidebar/
-│   ├── app/
-│   │   ├── app.js         # Entry point
-│   │   ├── store.js       # Redux store
-│   │   ├── actions.js     # Redux action creators
-│   │   ├── reducers.js    # Redux reducers
-│   │   ├── components/    # React components
-│   │   ├── data/          # Initial configs
-│   │   └── utils/         # Constants, helpers
-│   └── static/scss/       # SCSS styles
-└── vendor/                # Third-party (do not modify)
+└── sidebar/
+    ├── app/
+    │   ├── app.js         # Entry point
+    │   ├── router.js      # Three-view router (no react-router)
+    │   ├── store.js       # Redux store
+    │   ├── actions.js     # Redux action creators
+    │   ├── reducers.js    # Redux reducers
+    │   ├── components/    # React components
+    │   ├── data/          # Editor config
+    │   └── utils/         # Constants, helpers, lazy editor loader
+    └── static/scss/       # SCSS styles
 
 test/
-├── unit/                  # Karma/Mocha unit tests
 └── integration/           # Selenium integration tests
 ```
 
+There are no vendor directories. Everything third-party is bundled by
+webpack from node_modules.
+
 ## Important Notes
 
-- **Vendor directories**: Do not modify `src/vendor/` or `src/sidebar/vendor/`
 - **No TypeScript**: This project uses plain JavaScript with Babel
-- **React 16.2**: No hooks - use class components with lifecycle methods
-- **Browser compatibility**: Target Firefox only (WebExtension)
+- **Preact**: `react` and `react-dom` are aliased to `preact/compat` in
+  `webpack.config.js`. Write ordinary React code; the alias is the only
+  place Preact is mentioned.
+- **CKEditor is lazily loaded**: reach it through `utils/loadEditor.js`.
+  Importing `ckeditor5` anywhere else pulls ~880 KB back into the bundle
+  that every sidebar open must parse. Import it by *named* exports only:
+  `import('ckeditor5')` defeats tree-shaking and drags in every plugin.
+- **The build is production by default**: `npm run webpack:watch` passes
+  `--mode development` for source maps. Do not change the default.
+- **Browser compatibility**: Firefox 115+ only (WebExtension)
 - **i18n**: Use `browser.i18n.getMessage('key')` for localized strings
 - **Formatting**: Run `npm run format` before committing
