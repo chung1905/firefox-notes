@@ -1,7 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import classNames from 'classnames';
 
 import SyncIcon from './icons/SyncIcon';
 import MoreIcon from './icons/MoreIcon';
@@ -138,10 +137,12 @@ class Footer extends React.Component {
   render() {
     if (!this.props.state.kinto.isLoaded) return '';
 
-    const footerClass = classNames({
-      warning: this.currentState.yellowBackground,
-      animateSyncIcon: this.currentState.animateSyncIcon,
-    });
+    const footerClass = [
+      this.currentState.yellowBackground ? 'warning' : '',
+      this.currentState.animateSyncIcon ? 'animateSyncIcon' : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
 
     this.buttons = [];
 

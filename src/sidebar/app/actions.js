@@ -16,8 +16,7 @@ import {
 
 import INITIAL_CONTENT from './data/initialContent';
 import { getFirstNonEmptyElement, formatFilename } from './utils/utils';
-import { v4 as uuid4 } from 'uuid';
-import * as FileSaver from 'file-saver';
+import { saveFile } from './utils/download';
 
 /*
  * action creators
@@ -83,7 +82,7 @@ export function createdNote() {
 
 export function createNote(content = '', origin, id) {
   if (!id) {
-    id = uuid4();
+    id = crypto.randomUUID();
   }
 
   // Send create request to storage.sync
@@ -148,7 +147,7 @@ export function exportHTML(content) {
     { type: exportFileType },
   );
 
-  FileSaver.saveAs(data, exportFileName);
+  saveFile(data, exportFileName);
 
   return { type: EXPORT_HTML, content };
 }
