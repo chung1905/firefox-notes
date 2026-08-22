@@ -150,9 +150,6 @@ export function exportHTML(content) {
 
   FileSaver.saveAs(data, exportFileName);
 
-  chrome.runtime.sendMessage({
-    action: 'metrics-export',
-  });
   return { type: EXPORT_HTML, content };
 }
 

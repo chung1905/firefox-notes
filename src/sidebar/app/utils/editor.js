@@ -37,10 +37,6 @@ function customizeEditor(editor) {
   document.addEventListener('drop', () => {
     editor.fire('changesDone');
     mainEditor.classList.remove('drag-n-drop-focus');
-    browser.runtime.sendMessage({
-      action: 'metrics-drag-n-drop',
-      context: getPadStats(editor),
-    });
   });
 
   // prevent adding a '„' character and instead close the editor
@@ -90,71 +86,4 @@ function localizeEditorButtons() {
   bullet.title = browser.i18n.getMessage('bulletedListTitle');
 }
 
-function getPadStats(editor) {
-  const text = editor.getData();
-
-  const styles = {
-    size: false,
-    bold: false,
-    italic: false,
-    strike: false,
-    list: false,
-    list_bulleted: false,
-    list_numbered: false,
-  };
-
-  // Create a range over the entire document to scan for styles
-  const range = editor.model.createRangeIn(editor.model.document.getRoot());
-  for (const value of range) {
-    if (value.type === 'text') {
-      const attrs = value.item.textNode
-        ? value.item.textNode._attrs
-        : value.item._attrs;
-      // Bold
-      if (attrs && attrs.get('bold')) {
-        styles.bold = true;
-      }
-      // Italic
-      if (attrs && attrs.get('italic')) {
-        styles.italic = true;
-      }
-      // Strikethrough
-      if (attrs && attrs.get('strikethrough')) {
-        styles.strike = true;
-      }
-    }
-
-    if (value.type === 'elementStart') {
-      // Size
-      if (value.item.name.indexOf('heading') === 0) {
-        styles.size = true;
-      }
-
-      // List
-      if (value.item.name === 'listItem') {
-        styles.list = true;
-        const listType = value.item._attrs
-          ? value.item._attrs.get('listType')
-          : value.item.getAttribute('listType');
-        if (listType === 'bulleted') {
-          styles.list_bulleted = true;
-        } else if (listType === 'numbered') {
-          styles.list_numbered = true;
-        }
-      }
-    }
-  }
-
-  return {
-    syncEnabled: false,
-    characters: text.length,
-    lineBreaks: (text.match(/\n/g) || []).length,
-    usesSize: styles.size,
-    usesBold: styles.bold,
-    usesItalics: styles.italic,
-    usesStrikethrough: styles.strike,
-    usesList: styles.list,
-  };
-}
-
-export { customizeEditor, getPadStats };
+export { customizeEditor };

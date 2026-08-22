@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 
 import INITIAL_CONFIG from '../data/editorConfig';
 import { SEND_TO_NOTES, FROM_BLANK_NOTE } from '../utils/constants';
-import { getPadStats, customizeEditor } from '../utils/editor';
+import { customizeEditor } from '../utils/editor';
 
 import { updateNote, createNote, deleteNote, setFocusedNote } from '../actions';
 
@@ -85,11 +85,6 @@ class Editor extends React.Component {
                 }
               }
               this.ignoreChange = false;
-
-              chrome.runtime.sendMessage({
-                action: 'metrics-changed',
-                context: getPadStats(editor),
-              });
             }
             this.delayUpdateNote = null;
           }, 50);
