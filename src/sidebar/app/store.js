@@ -1,5 +1,5 @@
 import { createStore, applyMiddleware } from 'redux';
-import thunkMiddleware from 'redux-thunk';
+import { thunk } from 'redux-thunk';
 import notesApp from './reducers';
 
 // Persisting on every action meant a JSON.stringify of every note's full HTML
@@ -39,7 +39,7 @@ const storeState = (store) => {
 
 const store = createStore(
   notesApp,
-  applyMiddleware(storeState, thunkMiddleware),
+  applyMiddleware(storeState, thunk),
 );
 
 export default store;

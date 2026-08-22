@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 
 import store from './store';
@@ -41,14 +41,13 @@ browser.storage.local.get().then((result) => {
   }
 
   // Render root DOM element
-  ReactDOM.render(
+  createRoot(document.getElementById('notes')).render(
     <Provider store={store}>
       <div style={styles.container}>
         <Router />
         <Footer />
       </div>
     </Provider>,
-    document.getElementById('notes'),
   );
 });
 

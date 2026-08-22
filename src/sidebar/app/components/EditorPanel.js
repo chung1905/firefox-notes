@@ -1,7 +1,6 @@
 /* eslint-disable react/jsx-key */
 import React from 'react';
 import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
 import { FROM_LIST_VIEW, FROM_IN_NOTE } from '../utils/constants';
 
 import Header from './Header';
@@ -17,11 +16,13 @@ class EditorPanel extends React.Component {
     this.origin = FROM_LIST_VIEW; // used while sending 'new-note' metric
 
     this.note = {}; // Note should be reference to state.
+    this.lastFocusedNoteId = props.state.sync.focusedNoteId;
+
     if (props.match.params.id) {
-      this.note = props.state.notes.find((note) => {
-        return note.id === props.match.params.id;
-      });
-      this.props.dispatch(setFocusedNote(props.match.params.id));
+      this.note =
+        props.state.notes.find((note) => {
+          return note.id === props.match.params.id;
+        }) || {};
     }
 
     this.onNewNoteEvent = () => {
@@ -31,27 +32,28 @@ class EditorPanel extends React.Component {
     };
   }
 
-  // This is triggered when redux update state.
-  componentWillReceiveProps(nextProps) {
-    if (
-      this.props.state.sync.focusedNoteId !== nextProps.state.sync.focusedNoteId
-    ) {
-      this.note = nextProps.state.notes.find((note) => {
-        return note.id === nextProps.state.sync.focusedNoteId;
-      });
-      this.props.dispatch(setFocusedNote(nextProps.state.sync.focusedNoteId));
-    } else if (!nextProps.state.sync.isSyncing) {
-      this.note = nextProps.state.notes.find((note) => {
-        return note.id === nextProps.state.sync.focusedNoteId;
-      });
+  componentDidMount() {
+    if (this.props.match.params.id) {
+      this.props.dispatch(setFocusedNote(this.props.match.params.id));
     }
+  }
 
-    if (!this.note) {
-      this.note = {};
+  // Derived during render rather than in componentWillReceiveProps, which
+  // React 19 removed. While a save is in flight the previous note object is
+  // deliberately kept, so the editor is not reset mid-sync.
+  syncNoteFromState() {
+    const { sync, notes } = this.props.state;
+    const focusChanged = this.lastFocusedNoteId !== sync.focusedNoteId;
+
+    if (focusChanged || !sync.isSyncing) {
+      this.lastFocusedNoteId = sync.focusedNoteId;
+      this.note = notes.find((note) => note.id === sync.focusedNoteId) || {};
     }
   }
 
   render() {
+    this.syncNoteFromState();
+
     return [
       <Header
         key="header"
@@ -74,12 +76,5 @@ function mapStateToProps(state) {
     state,
   };
 }
-
-EditorPanel.propTypes = {
-  state: PropTypes.object.isRequired,
-  match: PropTypes.object.isRequired,
-  history: PropTypes.object.isRequired,
-  dispatch: PropTypes.func.isRequired,
-};
 
 export default connect(mapStateToProps)(EditorPanel);

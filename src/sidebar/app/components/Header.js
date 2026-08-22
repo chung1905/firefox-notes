@@ -1,6 +1,5 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
 
 import ArrowLeftIcon from './icons/ArrowLeftIcon';
 import MoreIcon from './icons/MoreIcon';
@@ -175,13 +174,5 @@ function mapStateToProps(state) {
     state,
   };
 }
-
-Header.propTypes = {
-  state: PropTypes.object.isRequired,
-  history: PropTypes.object.isRequired,
-  note: PropTypes.object,
-  onNewNoteEvent: PropTypes.func.isRequired,
-  dispatch: PropTypes.func.isRequired,
-};
 
 export default connect(mapStateToProps)(Header);

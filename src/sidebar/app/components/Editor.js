@@ -1,6 +1,5 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
 
 import loadEditor from '../utils/loadEditor';
 import { SEND_TO_NOTES, FROM_BLANK_NOTE } from '../utils/constants';
@@ -104,19 +103,19 @@ class Editor extends React.Component {
   }
 
   // This is triggered when redux update state.
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     if (
       this.editor &&
-      this.props.note &&
-      this.editor.getData() !== nextProps.note.content
+      prevProps.note &&
+      this.editor.getData() !== this.props.note.content
     ) {
-      if (nextProps.note.id !== this.props.note.id) {
+      if (this.props.note.id !== prevProps.note.id) {
         this.ignoreChange = true;
       }
       if (!this.delayUpdateNote) {
         // If no delay waiting, we apply modification
         this.ignoreChange = true;
-        this.editor.setData(nextProps.note.content || '<p></p>');
+        this.editor.setData(this.props.note.content || '<p></p>');
         this.editor.editing.view.focus();
       }
     }
@@ -161,13 +160,5 @@ function mapStateToProps(state) {
     state,
   };
 }
-
-Editor.propTypes = {
-  state: PropTypes.object.isRequired,
-  history: PropTypes.object.isRequired,
-  origin: PropTypes.string.isRequired,
-  note: PropTypes.object,
-  dispatch: PropTypes.func.isRequired,
-};
 
 export default connect(mapStateToProps)(Editor);
