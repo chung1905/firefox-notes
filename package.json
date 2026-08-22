@@ -89,6 +89,6 @@
     "test:karma": "webpack --config webpack.test-unit.js && NODE_ENV=test karma start",
     "test:ui": "test/integration/setup-webext.sh && mocha ./test/integration --retries 1 --reporter=list --require @babel/register",
     "webpack": "webpack --config webpack.config.js",
-    "webpack:watch": "webpack --config webpack.config.js --watch"
+    "webpack:watch": "webpack --config webpack.config.js --mode development --watch"
   }
 }
