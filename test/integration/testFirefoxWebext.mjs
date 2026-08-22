@@ -1,12 +1,9 @@
 import { Builder, By, until } from 'selenium-webdriver';
 
-import * as chai from 'chai';
+import assert from 'node:assert/strict';
 import * as firefox from 'selenium-webdriver/firefox.js';
 
 import ListPage from './page_objects/list_page.mjs';
-
-const assert = chai.assert;
-const expect = chai.expect;
 
 describe('The Firefox Notes web extension', function() {
   const timeout = 10000;
@@ -73,7 +70,7 @@ describe('The Firefox Notes web extension', function() {
     let listPage = await new ListPage(driver).waitForPageToLoad();
     let notesList = await listPage.notesList();
     let listNoteTitle = await notesList[0].getTitle();
-    expect(listNoteTitle).to.equal(defaultNoteTitle);
+    assert.equal(listNoteTitle, defaultNoteTitle);
   });
 
   it('should add a note', async function() {
@@ -88,7 +85,7 @@ describe('The Firefox Notes web extension', function() {
     listPage = await newNote.clickBackButton();
     let notesList = await listPage.notesList();
     let listNoteTitle = await notesList[0].getTitle();
-    expect(listNoteTitle).to.equal(title);
+    assert.equal(listNoteTitle, title);
   });
 
   it('should be able to delete a note', async function() {
@@ -99,7 +96,7 @@ describe('The Firefox Notes web extension', function() {
     await notePage.addNote(title);
     listPage = await notePage.deleteNote();
     let notesList = await listPage.notesList();
-    expect(notesList.length).to.equal(1);
+    assert.equal(notesList.length, 1);
   });
 
   it('should be able to add a note from the note page', async function() {
@@ -109,21 +106,21 @@ describe('The Firefox Notes web extension', function() {
     let title = 'THIS IS A TEST';
     let paragraph = 'this isnt a test';
     await notePage.addNote(title, paragraph);
-    expect(await notePage.noteTitle).to.equal(title)
+    assert.equal(await notePage.noteTitle, title);
     let newNote = await notePage.addNewNote();
-    expect(await newNote.noteTitle).to.equal('New Note')
+    assert.equal(await newNote.noteTitle, 'New Note');
   });
 
   it('should be navigate to feedback page', async function() {
     // Checks feedback page loads in new window
     let listPage = await new ListPage(driver).waitForPageToLoad();
     let notePage = await listPage.newNoteButton();
-    expect(await notePage.noteTitle).to.equal('New Note');
+    assert.equal(await notePage.noteTitle, 'New Note');
     await notePage.clickGiveFeedback();
     await driver.wait(
       until.titleIs('TxP: Firefox Notes'),
     5000);
-    expect(await driver.getCurrentUrl()).to.match(/(?:qsurvey)/);
+    assert.match(await driver.getCurrentUrl(), /(?:qsurvey)/);
   });
 
 });

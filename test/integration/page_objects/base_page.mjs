@@ -1,17 +1,17 @@
 import { By, until, Key } from 'selenium-webdriver';
-import { createLogger, transports } from 'winston';
-import { format } from 'logform';
-const logger = createLogger({
-  level: process.env.UI_TEST_LOGGING || 'silent',
-  format: format.combine(
-    format.colorize(),
-    format.align(),
-    format.printf(info => `${info.level}: ${info.message}`),
-  ),
-  transports: [
-    new transports.Console(),
-  ]
-});
+
+// Page-object tracing, off unless UI_TEST_LOGGING names a level that includes
+// info. The ordering mirrors winston's npm levels, which this replaced.
+const LEVELS = ['error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly'];
+const threshold = LEVELS.indexOf(process.env.UI_TEST_LOGGING || 'silent');
+
+const logger = {
+  info(message) {
+    if (threshold >= LEVELS.indexOf('info')) {
+      console.log(`info: ${message}`);
+    }
+  },
+};
 
 export default class BasePage {
 
