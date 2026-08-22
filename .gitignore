@@ -1,6 +1,5 @@
 node_modules/
 signed-addon.xpi
-src/vendor/*
 src/sidebar/vendor/*
 src/_locales
 native/app/_locales

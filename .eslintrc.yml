@@ -16,30 +16,6 @@ extends:
 
 globals:
   ClassicEditor: false
-  Jose: false
-  JoseJWE: false
-  Kinto: false
-  KintoClient: false
-  TestPilotGA: false
-  checkIndexedDbHealth: false
-  customizeEditor: false
-  formatFooterTime: false
-  fxaCryptoRelier: false
-  fxaFetchProfile: false
-  fxaRenewCredential: false
-  getPadStats: false
-  localizeEditorButtons: false
-  migrationCheck: false
-  migrationNote: false
-  migrationBody: false
-  retrieveNote: false
-  setAnimation: false
-  BrowserStorageCredentials: false
-  loadFromKinto: false
-  disconnectFromKinto: false
-  saveToKinto: false
-  createNote: false
-  deleteNote: false
 
 plugins:
   - jsx-a11y

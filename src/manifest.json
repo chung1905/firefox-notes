@@ -31,7 +31,7 @@
   },
   "permissions": ["contextMenus", "storage"],
   "background": {
-    "scripts": ["utils.js", "storage-sync.js", "background.js"]
+    "scripts": ["storage-sync.js", "background.js"]
   },
   "options_ui": {
     "page": "settings/settings.html"
