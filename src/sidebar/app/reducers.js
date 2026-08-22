@@ -14,10 +14,7 @@ import {
   REQUEST_WELCOME_PAGE,
 } from './utils/constants';
 
-import {
-  getFirstLineFromContent,
-  stripHtmlWithoutFirstLine,
-} from './utils/utils';
+import { getNoteSummary } from './utils/utils';
 
 function sync(sync = {}, action) {
   switch (action.type) {
@@ -100,8 +97,7 @@ function notes(notes = [], action) {
       if (action.notes) {
         const list = Array.from(action.notes);
         list.map((note) => {
-          note.firstLine = getFirstLineFromContent(note.content);
-          note.secondLine = stripHtmlWithoutFirstLine(note.content);
+          Object.assign(note, getNoteSummary(note.content));
           if (!(note.lastModified instanceof Date)) {
             note.lastModified = note.lastModified
               ? new Date(note.lastModified)
@@ -121,8 +117,7 @@ function notes(notes = [], action) {
         res.push({
           id: note.id,
           content: note.content,
-          firstLine: getFirstLineFromContent(note.content),
-          secondLine: stripHtmlWithoutFirstLine(note.content),
+          ...getNoteSummary(note.content),
           lastModified:
             note.lastModified instanceof Date
               ? note.lastModified
@@ -138,8 +133,7 @@ function notes(notes = [], action) {
       list.push({
         id: action.id,
         content: action.content,
-        firstLine: getFirstLineFromContent(action.content),
-        secondLine: stripHtmlWithoutFirstLine(action.content),
+        ...getNoteSummary(action.content),
         lastModified: action.lastModified || new Date(),
       });
       return list;
@@ -151,15 +145,13 @@ function notes(notes = [], action) {
       const note = list.find((note) => note.id === action.id);
       if (note) {
         note.content = action.content;
-        note.firstLine = getFirstLineFromContent(action.content);
-        note.secondLine = stripHtmlWithoutFirstLine(action.content);
+        Object.assign(note, getNoteSummary(action.content));
         note.lastModified = new Date(action.lastModified);
       } else {
         list.push({
           id: action.id,
           content: action.content,
-          firstLine: getFirstLineFromContent(action.content),
-          secondLine: stripHtmlWithoutFirstLine(action.content),
+          ...getNoteSummary(action.content),
           lastModified: new Date(action.lastModified),
         });
       }

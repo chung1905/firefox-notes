@@ -128,7 +128,7 @@ class ListPanel extends React.Component {
           <NewIcon /> <span>{browser.i18n.getMessage('newNote')}</span>
         </button>
         <ul>
-          {this.props.state.notes
+          {Array.from(this.props.state.notes)
             .sort((a, b) => {
               if (a.lastModified.getTime() !== b.lastModified.getTime()) {
                 return a.lastModified.getTime() < b.lastModified.getTime()
