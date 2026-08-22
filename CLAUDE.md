@@ -124,7 +124,11 @@ the `copyExtensionFiles` plugin in `writeBundle`. A new static extension file
 needs no config change; a new bundled directory does.
 
 - `react`/`react-dom` alias to `preact/compat`. Write ordinary React; the alias
-  is the only place Preact appears.
+  is the only place Preact appears. **`react-dom` is deliberately not
+  installed** — the alias resolves `react-dom/client` before npm ever does, so
+  don't "fix" `app.jsx`'s import by adding the package back. `react` is still
+  installed only because react-redux peer-depends on it; nothing imports the
+  real thing.
 - Automatic JSX runtime with `importSource: 'preact'`, so `import React` is
   needed only for `React.Component`.
 - `target: 'firefox115'` matches the manifest's `strict_min_version`.
