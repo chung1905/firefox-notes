@@ -48,6 +48,17 @@
     width: 90em; // max-width of Firefox sidebar is 36em, but with Firefox Side-view it can be beyond that
   }
 
+  // CKEditor frames the toolbar as a rounded panel meant to sit inside a page:
+  // a border on every side but the bottom, plus rounded top corners. The
+  // sidebar's toolbar is full-bleed, so that only ever showed as a light rule
+  // across the top and down the left -- .ck-editor__top is 90em wide, which
+  // puts the right edge off-screen. The one edge that means anything here is
+  // the one against the editable area, and .ck-editor__top draws it above.
+  .ck-editor__top .ck-sticky-panel .ck-sticky-panel__content {
+    border: 0;
+    border-radius: 0;
+  }
+
   .ck-editor__main {
     flex: auto;
     font-size: 14px;
