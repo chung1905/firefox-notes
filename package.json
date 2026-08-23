@@ -1,11 +1,11 @@
 {
-  "name": "notes",
-  "id": "notes@mozilla.com",
+  "name": "sidebar-notes",
+  "id": "sidebar-notes@chung1905.github.io",
   "description": "Displays a sidebar that lets you take notes on web pages.",
-  "version": "4.3.7",
-  "author": "Test Pilot Mozilla Team",
+  "version": "4.4.0",
+  "author": "chung1905",
   "bugs": {
-    "url": "https://github.com/mozilla/notes/issues"
+    "url": "https://github.com/chung1905/firefox-notes/issues"
   },
   "engines": {
     "node": ">=22.12"
@@ -36,9 +36,9 @@
     "vite": "^8.2.2",
     "web-ext": "^10.6.0"
   },
-  "homepage": "https://github.com/mozilla/notes#readme",
+  "homepage": "https://github.com/chung1905/firefox-notes#readme",
   "license": "MPL-2.0",
-  "repository": "mozilla/notes",
+  "repository": "chung1905/firefox-notes",
   "scripts": {
     "build": "node scripts/build-locales && npm run vite && web-ext build -s build",
     "clean": "rimraf web-ext-artifacts && npm run postinstall",

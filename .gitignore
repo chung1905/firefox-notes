@@ -1,5 +1,5 @@
 node_modules/
-signed-addon.xpi
+*.xpi
 src/_locales
 native/app/_locales
 web-ext-artifacts/

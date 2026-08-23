@@ -1,59 +1,99 @@
-# Firefox Notes
+# Sidebar Notes
 
-A notepad for Firefox
+A note-taking sidebar for Firefox 115+.
 
-[![CircleCI](https://circleci.com/gh/mozilla/notes/tree/master.svg?style=svg)](https://circleci.com/gh/mozilla/notes/tree/master)
-[![Available on Test Pilot](https://img.shields.io/badge/available_on-Test_Pilot-0996F8.svg)](https://testpilot.firefox.com/experiments/notes)
-> Discussion Forum: [https://discourse.mozilla.org/c/archives/test-pilot](https://discourse.mozilla.org/c/archives/test-pilot)
+Sidebar Notes is a fork of Mozilla's [Notes](https://github.com/mozilla/notes)
+add-on, whose last release was 4.3.7 in September 2020.
 
+> **Not affiliated with or endorsed by Mozilla.** This project is based on
+> Mozilla open source software. "Mozilla" and "Firefox" are trademarks of the
+> Mozilla Foundation, used here only to describe that origin and to name the
+> browser the add-on runs in.
 
-## Releases
+## What this fork changes
 
-The releases are packaged by CircleCI for [Android](https://app.circleci.com/pipelines/github/mozilla/notes/20/workflows/239f8590-cfae-491b-9db7-30971c73fd9a/jobs/3294/artifacts) and the [WebExtension](https://app.circleci.com/pipelines/github/mozilla/notes/20/workflows/239f8590-cfae-491b-9db7-30971c73fd9a/jobs/3292/artifacts).
+The upstream add-on was built on Kinto and Firefox Accounts, neither of which
+is still available to it. This fork replaces that and modernises the stack:
 
-## Contribute
+- **Sync is `browser.storage.sync`**, not Kinto + Firefox Accounts. There is no
+  account and nothing to sign into. Syncing is a setting and is **off by
+  default**; notes always live in `browser.storage.local`.
+- **No telemetry and no outbound requests.** Google Analytics went upstream in
+  4.3.4; the Mozilla survey link behind the "Give Feedback" menu item is gone
+  in 4.4.0. The add-on now makes no network requests at all.
+- **Current toolchain**: Vite 8, React 19 API via `preact/compat`, Redux 5,
+  CKEditor 5. No Babel, no Karma, no TypeScript.
+- **A dark theme** that follows a setting on the options page.
 
-* Step 0: If you plan on sending a pull-request, you should fork the repository.
-* Step 1: Clone the [notes](https://github.com/mozilla/notes) repository or your fork.
+## Install
+
+Not yet on [addons.mozilla.org](https://addons.mozilla.org/). Until then, build
+it yourself (below) and load `web-ext-artifacts/*.zip` through
+`about:debugging` → This Firefox → Load Temporary Add-on.
+
+## Development
+
+Requires **Node.js 22.12 or newer** — Vite 8 and `selenium-webdriver` both
+need it, and Node 18 does not work.
+
+| Command         | Description                                     |
+|-----------------|-------------------------------------------------|
+| `npm install`   | Install dependencies and compile `src/_locales`. |
+| `npm run build` | Build the extension into `build/`, then package it into `web-ext-artifacts/`. |
+| `npm start`     | Launch Firefox with the extension and rebuild on change. |
+| `npm run lint`  | Stylelint and ESLint over `src/`.               |
+| `npm run format`| Prettier, then `eslint --fix`. Run before committing. |
+| `npm run test:ui` | Selenium + Mocha integration suite. Needs `npm run build` first. |
+
+`src/_locales/` is generated from `locales/*/notes.properties` by
+`npm run postinstall` and is not checked in; the build fails without it.
+
+## Reproducible build
+
+The published add-on is bundled by Vite, so AMO requires the source and these
+instructions. The build is fully local — no network access is needed after
+`npm ci`, and no web-based tooling is involved.
+
 ```
-git clone https://github.com/mozilla/notes.git
-# or
-git clone https://github.com/[yourusername]/notes.git
+npm ci          # installs exactly what package-lock.json pins
+npm run build
 ```
-* Step 2: Navigate to the root of the directory you cloned and run:
-> Make sure to use Node.js 22.12+.
 
-| Command         | Description                               |
-|-----------------|-------------------------------------------|
-| `npm install`   | Installs required Node.js dependencies.   |
-| `npm run build` | Builds the application as a Web Extension.|
-| `npm start`     | Launches Firefox with the Web Extension.  |
+The reviewable artifact is `web-ext-artifacts/sidebar_notes-<version>.zip`,
+whose contents match the uploaded package. `npm run build` runs `clean` first,
+so the output does not depend on previous builds.
 
-## WebExtension Permissions
+Last verified on macOS 26.6, Node 24.19.0, npm 11.17.0. Any Node ≥ 22.12
+should reproduce it.
 
-| Permission      | Description                                                                    |
-|-----------------|--------------------------------------------------------------------------------|
-| `contextMenus`  | Used for "Send to Note" feature, sends text from pages to the Notes sidebar.   |
-| `storage`       | Storage for Notes, and syncing them via `storage.sync`.                        |
+## Permissions
+
+| Permission     | Why                                                                    |
+|----------------|------------------------------------------------------------------------|
+| `contextMenus` | "Add to Notes" — sends selected page text to the sidebar.               |
+| `storage`      | Stores notes in `storage.local`, and in `storage.sync` when syncing is on. |
+
+No host permissions: the add-on never reads page content except the text you
+explicitly send it through the context menu.
 
 ## Release
 
-See [RELEASE.md](https://github.com/mozilla/notes/blob/master/RELEASE.md) for release steps.
+See [RELEASE.md](RELEASE.md).
 
-### Localization
+## Localization
 
-Firefox Notes localization is managed via [Pontoon](https://pontoon.mozilla.org/), not direct pull requests to the repository. If you want to fix a typo, add a new language, or simply know more about localization, please get in touch with the [existing localization team](https://pontoon.mozilla.org/teams/) for your language, or Mozilla’s [l10n-drivers](https://wiki.mozilla.org/L10n:Mozilla_Team#Mozilla_Corporation) for guidance.
+Upstream translations came from [Pontoon](https://pontoon.mozilla.org/) and are
+kept here under `locales/`, minus the product name, which this fork had to
+change. New strings added by this fork ship in English only — it is not a
+Pontoon project.
 
-## Licenses
+## Licences
 
-* [Mozilla Public License Version 2.0](LICENSE)
-* [CKEditor 5](https://github.com/ckeditor/ckeditor5/blob/master/LICENSE.md), used under its GPL licence (`licenseKey: 'GPL'`)
+- The add-on: [Mozilla Public License 2.0](LICENSE), inherited from upstream.
+- [CKEditor 5](https://github.com/ckeditor/ckeditor5/blob/master/LICENSE.md),
+  used under its GPL 2+ licence (`licenseKey: 'GPL'`).
 
-## Design
-
-* Design for reference: https://mozilla.invisionapp.com/share/6VBUYHMRB#/281041484_Firefox_Notes
-* Mobile design for reference: https://mozilla.invisionapp.com/share/BTGS26C2FE4
-
-## Screenshot
-
-![Notes v4](https://i.imgur.com/kOuI2uG.png)
+Because the packaged add-on bundles CKEditor, the distributed build as a whole
+carries GPL 2+ terms, and this repository is the corresponding source. MPL-2.0
+permits that combination: GPL is a Secondary License under §3.3, and no file
+here carries the Exhibit B "Incompatible With Secondary Licenses" notice.

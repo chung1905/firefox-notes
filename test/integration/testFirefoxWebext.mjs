@@ -5,9 +5,9 @@ import * as firefox from 'selenium-webdriver/firefox.js';
 
 import ListPage from './page_objects/list_page.mjs';
 
-describe('The Firefox Notes web extension', function() {
+describe('The Sidebar Notes web extension', function() {
   const timeout = 10000;
-  const defaultNoteTitle = 'Welcome to Firefox Notes!';
+  const defaultNoteTitle = 'Welcome to Sidebar Notes!';
   let addon_id;
   let addon;
   let options;
@@ -28,7 +28,7 @@ describe('The Firefox Notes web extension', function() {
       .forBrowser('firefox')
       .setFirefoxOptions(options)
       .build();
-    addon = await driver.installAddon('firefox_notes.xpi');
+    addon = await driver.installAddon('sidebar_notes.xpi');
     // Get addon numerical id
     await driver.setContext('chrome');
     addon_id = await driver.executeScript(
@@ -109,18 +109,6 @@ describe('The Firefox Notes web extension', function() {
     assert.equal(await notePage.noteTitle, title);
     let newNote = await notePage.addNewNote();
     assert.equal(await newNote.noteTitle, 'New Note');
-  });
-
-  it('should be navigate to feedback page', async function() {
-    // Checks feedback page loads in new window
-    let listPage = await new ListPage(driver).waitForPageToLoad();
-    let notePage = await listPage.newNoteButton();
-    assert.equal(await notePage.noteTitle, 'New Note');
-    await notePage.clickGiveFeedback();
-    await driver.wait(
-      until.titleIs('TxP: Firefox Notes'),
-    5000);
-    assert.match(await driver.getCurrentUrl(), /(?:qsurvey)/);
   });
 
 });

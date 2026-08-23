@@ -1,13 +1,13 @@
 {
   "manifest_version": 2,
-  "name": "Notes by Firefox",
+  "name": "Sidebar Notes",
   "description": "Displays a sidebar that lets you take notes on web pages.",
-  "version": "4.3.7",
+  "version": "4.4.0",
   "default_locale": "en_US",
-  "author": "Mozilla Test Pilot team",
+  "author": "chung1905",
   "browser_specific_settings": {
     "gecko": {
-      "id": "notes@mozilla.com",
+      "id": "sidebar-notes@chung1905.github.io",
       "strict_min_version": "115.0"
     }
   },
@@ -27,7 +27,7 @@
       "32": "icons/notes-fill.svg"
     },
     "default_area": "navbar",
-    "default_title": "Firefox Notes"
+    "default_title": "Sidebar Notes"
   },
   "permissions": ["contextMenus", "storage"],
   "background": {

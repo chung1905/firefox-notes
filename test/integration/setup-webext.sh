@@ -1,3 +1,3 @@
 #!/bin/bash
-cp ./web-ext-artifacts/*.zip ./firefox_notes.xpi
+cp ./web-ext-artifacts/*.zip ./sidebar_notes.xpi
 echo "Webextension built and moved to root dir."

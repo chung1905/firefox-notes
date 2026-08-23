@@ -1,5 +1,14 @@
 # Changelog
 
+## 4.4.0
+
+* Renamed to **Sidebar Notes** and given its own add-on ID. This is a fork of
+  Mozilla's Notes, not affiliated with or endorsed by Mozilla.
+* Removed the "Give Feedback" menu item, which opened a Mozilla survey for the
+  upstream add-on. The extension now makes no network requests at all.
+* Fixed the welcome note, which told you to sign into a Firefox Account that
+  the add-on no longer has. Syncing is a setting on the options page.
+
 ## 4.3.6
 
 * Bump for AMO

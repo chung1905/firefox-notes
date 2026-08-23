@@ -1,4 +1,4 @@
-# CLAUDE.md — Firefox Notes
+# CLAUDE.md — Sidebar Notes
 
 Guidance for AI coding agents (Claude Code and others) working in this
 repository. `AGENTS.md` is a symlink to this file — edit this one.
@@ -6,6 +6,16 @@ repository. `AGENTS.md` is a symlink to this file — edit this one.
 ## Project Overview
 
 A Manifest V2 Firefox extension (115+) providing a note-taking sidebar.
+
+This is a fork of Mozilla's abandoned `mozilla/notes` (last release 4.3.7,
+September 2020), rebranded **Sidebar Notes** under the add-on ID
+`sidebar-notes@chung1905.github.io`. Mozilla's trademark policy bars a fork
+from using its marks in a user-facing name, and AMO rejects the upstream ID as
+a duplicate — so neither the name nor the ID may drift back. The extension is
+MPL-2.0 and bundles CKEditor 5 under GPL 2+, which MPL §3.3 permits because no
+file carries the Exhibit B notice; keep the repo public, since it is the
+corresponding source for that GPL build, and never suppress the "Powered by
+CKEditor" badge.
 
 - **WebExtension** (`src/`): React 19 API rendered by Preact + Redux, with
   CKEditor 5 for rich text.
@@ -33,10 +43,15 @@ The only suite is Selenium + Mocha under `test/integration/` (native ESM,
 `npm run test:ui`.
 
 It drives a real Firefox through geckodriver — no headless or mocked mode — and
-installs `firefox_notes.xpi` from the repo root, which
+installs `sidebar_notes.xpi` from the repo root, which
 `test/integration/setup-webext.sh` copies out of `web-ext-artifacts/`, so
-`npm run build` must succeed first. Neither that file nor `addon.xpi` (from
-`npm run package`) is gitignored; only `signed-addon.xpi` is.
+`npm run build` must succeed first. `.gitignore` covers `*.xpi`, so that file,
+`addon.xpi` (from `npm run package`) and `signed-addon.xpi` all stay untracked.
+
+The suite cannot run against a release Firefox: it installs an unsigned build,
+and release ignores `xpinstall.signatures.required=false`, failing every case
+in `beforeEach` with `ERROR_SIGNEDSTATE_REQUIRED`. Use Developer Edition,
+Nightly or ESR — which is what `start-deved` and `start-nightly` are for.
 
 `test:ui` passes `--retries 1`, so a case that fails once and passes on the
 retry still reports green.

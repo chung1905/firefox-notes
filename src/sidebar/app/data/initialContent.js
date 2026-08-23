@@ -8,9 +8,7 @@ const INITIAL_CONTENT = `
   </ul>
   <p><strong>${browser.i18n.getMessage('welcomeAccessNotes')}</strong></p>
   <ul>
-    <li>
-      ${browser.i18n.getMessage('welcomeSyncInfo', '<strong>' + browser.i18n.getMessage('syncNotes') + '</strong>')}
-    </li>
+    <li>Turn on <strong>${browser.i18n.getMessage('syncNotes')}</strong> in this extension’s settings.</li>
   </ul>
   <p>${browser.i18n.getMessage('welcomeFormatText')}</p>
   <ul>

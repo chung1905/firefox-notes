@@ -7,8 +7,6 @@ export default class NotePage extends BasePage {
     super(driver);
     this.backBtnLocator = '.iconBtn';
     this.editorLocator = '.ck-editor__editable';
-    this.feedbackBtnLocator = '.wrapper > ul:nth-child(1) >' +
-      ' li:nth-child(5) > button:nth-child(1)'
     this.menuItemLocator = '.wrapper > ul:nth-child(1) >' +
       ' li:nth-child(4) > button:nth-child(1)';
     this.newNoteBtnLocator = '.wrapper > ul:nth-child(1) >' +
@@ -110,33 +108,4 @@ export default class NotePage extends BasePage {
     );
     this.logger.info('Note added');
   }
-
-  /**
-  * @function clickGiveFeedback
-  * Clicks the Give Feedback button and switch selenium focus to it.
-  */
-  async clickGiveFeedback() {
-    let btn = await this.findElement(this.optionsMenuBtnLocator);
-    let feedback = await this.findElement(this.feedbackBtnLocator);
-    let actions = this.driver.actions();
-    let currentWindows = await this.driver.getAllWindowHandles();
-
-    await actions
-          .move({origin: btn})
-          .click()
-          .move({origin: feedback})
-          .click()
-          .perform();
-
-    await this.wait(
-      async () => {
-        let len = await this.driver.getAllWindowHandles();
-        return len.length > currentWindows.length;
-      },
-      5000
-    );
-
-    let newWindows = await this.driver.getAllWindowHandles();
-    await this.driver.switchTo().window(newWindows[1]);
-  };
 }

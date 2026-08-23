@@ -1,6 +1,6 @@
 /* global storageSync */
 /**
- * Background script for Firefox Notes
+ * Background script for Sidebar Notes
  *
  * Handles:
  * - Note storage, synced through browser.storage.sync unless the settings
