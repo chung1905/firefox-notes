@@ -1,10 +1,8 @@
 import {
-  SYNC_AUTHENTICATED,
-  KINTO_LOADED,
+  NOTES_LOADED,
   TEXT_SAVED,
   TEXT_SYNCING,
   TEXT_SYNCED,
-  DISCONNECTED,
   EXPORT_HTML,
   CREATE_NOTE,
   UPDATE_NOTE,
@@ -15,6 +13,7 @@ import {
 } from './utils/constants';
 
 import INITIAL_CONTENT from './data/initialContent';
+import { reconcileNotes } from './utils/reconcileNotes';
 import { getFirstNonEmptyElement, formatFilename } from './utils/utils';
 import { saveFile } from './utils/download';
 
@@ -46,32 +45,78 @@ export function updateNote(id, content) {
   return { type: UPDATE_NOTE, id, content, lastModified };
 }
 
-export function authenticate() {
-  // With storage.sync, just trigger a sync
-  browser.runtime.sendMessage({
-    action: 'kinto-sync',
-  });
-  return { type: SYNC_AUTHENTICATED };
-}
-
 export function saved(id, content, lastModified) {
   return { type: TEXT_SAVED, id, content, lastModified };
 }
 
-export function syncing() {
-  return { type: TEXT_SYNCING };
+export function syncing(id) {
+  return { type: TEXT_SYNCING, id };
 }
 
-export function synced(notes) {
-  return { type: TEXT_SYNCED, notes };
+// `id` and `lastModified` describe the note that just reached storage.sync;
+// they are what the per-note indicator keys off. Calls that only mean "stop
+// the global spinner" pass neither.
+export function synced(notes, id, lastModified) {
+  return { type: TEXT_SYNCED, notes, id, lastModified };
 }
 
-export function kintoLoad(notes) {
-  return { type: KINTO_LOADED, notes };
+/**
+ * A load straight from storage.sync.
+ *
+ * The incoming notes are reconciled against what the sidebar already has
+ * rather than replacing it: an edit that never made it to storage.sync would
+ * otherwise be overwritten here by the older synced copy, which is how a
+ * failed save used to vanish on the next sidebar open. Whatever is still
+ * unsynced afterwards is retried, so a failure that has since become saveable
+ * -- a full store the user has cleared, say -- resolves itself.
+ */
+export function notesLoaded(notes) {
+  if (!notes) return { type: NOTES_LOADED };
+
+  return (dispatch, getState) => {
+    const state = getState();
+    const { notes: merged, unsynced } = reconcileNotes(
+      state.notes,
+      state.noteSync,
+      notes,
+    );
+
+    dispatch({ type: NOTES_LOADED, notes: merged, unsynced });
+
+    const byId = new Map(merged.map((note) => [note.id, note]));
+    unsynced.forEach((id) => dispatch(retryNoteSync(byId.get(id))));
+  };
 }
 
-export function disconnect() {
-  return { type: DISCONNECTED };
+// The replay of storage.local.redux that paints the sidebar before sync
+// answers. Those notes are whatever was on screen last time rather than
+// anything storage.sync has confirmed, so only unfinished statuses carry
+// over; the load that follows settles the rest.
+export function notesLoadedFromCache(cached) {
+  return {
+    type: NOTES_LOADED,
+    notes: cached.notes,
+    noteSync: cached.noteSync,
+    fromCache: true,
+  };
+}
+
+// Re-sends a note storage.sync never accepted. It keeps the note's own
+// lastModified: this is the same edit reaching for storage again, not a new
+// one, and bumping the timestamp would let it win a conflict it should lose.
+export function retryNoteSync(note) {
+  return () =>
+    browser.windows.getCurrent({ populate: true }).then((windowInfo) => {
+      chrome.runtime.sendMessage({
+        action: UPDATE_NOTE,
+        from: windowInfo.id,
+        note: {
+          id: note.id,
+          content: note.content,
+          lastModified: note.lastModified,
+        },
+      });
+    });
 }
 
 // The note was already added optimistically by the createNote thunk, so this
@@ -160,6 +205,6 @@ export function requestWelcomeNote() {
   return { type: REQUEST_WELCOME_PAGE };
 }
 
-export function error(message) {
-  return { type: ERROR, message };
+export function error(message, id) {
+  return { type: ERROR, message, id };
 }

@@ -71,42 +71,73 @@ store. `app.jsx` is the only bundle entry point.
 
 Redux action types in `src/sidebar/app/utils/constants.js` are *the same
 strings* as the `browser.runtime` message actions (`create-note`,
-`text-synced`, `kinto-loaded`, …). `src/sidebar/app/onMessage.js` is the bridge:
+`text-synced`, `notes-loaded`, …). `src/sidebar/app/onMessage.js` is the bridge:
 it listens on `chrome.runtime.onMessage` and dispatches the matching action
 creator. Changing one of those strings changes both the wire protocol and the
 reducer.
 
 `constants.js` is only half the protocol: it holds what the background
 *broadcasts* to sidebars. Requests going the other way are inline literals —
-`app.jsx` sends `kinto-sync`, `ListPanel.jsx` sends `editor-ready`,
-`settings/settings.js` sends `theme-changed` — and `background.js` also handles
-`kinto-load`, `fetch-email` and `get-storage-usage` (replying `storage-usage`),
-none of which appear in `constants.js`. Read the switch in `background.js` for
-the full list before assuming a message name is unused.
+`app.jsx` and `Footer.jsx` send `load-notes`, `ListPanel.jsx` sends
+`editor-ready`, `settings/settings.js` sends `theme-changed` — and none of
+those appear in `constants.js`. Read the switch in `background.js` for the
+full list before assuming a message name is unused; every case in it is
+reachable, so a name that no sidebar sends is a bug, not a spare.
 
-Names starting with `kinto` are legacy. Kinto and Firefox Accounts are gone; the
-strings survive only for compatibility, and the transport is `storage.sync`.
+Nothing in the protocol is named after Kinto or Firefox Accounts any more. The
+request is `load-notes` and the broadcast is `notes-loaded` (`NOTES_LOADED`);
+`sync-authenticated`, `authenticate`, `fetch-email` and `disconnected` are
+gone, along with the empty profile `background.js` used to answer them with.
+Sync is `storage.sync` and there is nothing to sign in to, so a message name
+that implies an account is a mistake, not a compatibility shim.
 
 Because every window's sidebar receives every message, actions carry
 `from: windowInfo.id` and `onMessage.js` compares it against
 `browser.windows.getCurrent()` so the originating window doesn't re-apply its
 own edit.
 
+`text-syncing` and `error` also carry the `id` of the note they are about, so
+the `noteSync` reducer can key per-note status off them; `text-synced` uses the
+`note` it already carries. An `error` without an `id` still reaches the
+footer's global warning, it just can't flag a row.
+
+`error` carries the whole `note` and a `from`, and `onMessage.js` applies it to
+the other windows the way `text-saved` applies a successful one. Only success
+used to be broadcast, which is the case where nothing is at risk: see the
+storage.local note below for what a window left holding a stale copy does.
+
 ### Three storage layers
 
 1. `browser.storage.sync` — source of truth, one key per note (`note_<id>`).
-   Hard limits enforced in `storage-sync.js`: 6 KB/note (`NoteTooLargeError`),
-   100 KB total (`StorageLimitError`). These are meaningful UI states — throw
-   them and let `background.js` translate them into `error` messages rather than
-   swallowing them. Sync failures, by contrast, degrade gracefully: rejections
-   are caught and logged, not rethrown.
+   Two limits: `storage-sync.js` measures each note against 6 KB itself
+   (`NoteTooLargeError`), while the 100 KB total is the browser's and arrives
+   as a `QUOTA_BYTES` rejection that `saveNote` translates into
+   `StorageLimitError`. Nothing tracks usage ahead of that. Both are
+   meaningful UI states — throw them and let `background.js` turn them into
+   `error` messages rather than swallowing them. Sync failures, by contrast,
+   degrade gracefully: rejections are caught and logged, not rethrown.
 2. Redux store — in-memory UI state.
 3. `browser.storage.local.redux` — a serialized-store cache so the sidebar
    paints before sync returns. `store.js` writes it through a middleware
    throttled by `PERSIST_DELAY` (500 ms) with a `pagehide` flush; `app.jsx`
-   reads it, dispatches `kintoLoad`, then requests a sync. It is a throttle,
-   not a debounce — later actions don't reset the pending timer, so continuous
-   typing keeps writing every 500 ms instead of deferring indefinitely.
+   reads it, dispatches `notesLoadedFromCache`, then requests a load. It is a
+   throttle, not a debounce — later actions don't reset the pending timer, so
+   continuous typing keeps writing every 500 ms instead of deferring
+   indefinitely.
+
+   **Every window's sidebar writes this one key, whole, last writer wins.** So
+   a window's store may not diverge from its siblings' and be left there: a
+   window still holding the copy from before someone else's edit will write
+   that copy over the newer one. That is why a refused save is broadcast with
+   its note rather than only reported.
+
+An edit that never reached storage.sync only exists in those last two layers,
+so a load from layer 1 does not replace them outright. `utils/reconcileNotes.js`
+keeps any local copy whose `lastModified` is ahead of the synced one (an older
+local copy still loses — last write wins, unchanged), reports those ids back as
+`unsynced` so they stay flagged, and `notesLoaded` retries each one. Without that
+step the sync load quietly restored the last saved version and the failed edit
+was gone.
 
 ### Routing and views
 

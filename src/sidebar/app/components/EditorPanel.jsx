@@ -4,6 +4,7 @@ import { FROM_LIST_VIEW, FROM_IN_NOTE } from '../utils/constants';
 
 import Header from './Header';
 import Editor from './Editor';
+import { NoteSyncBar } from './NoteSyncStatus';
 
 import { setFocusedNote } from '../actions';
 
@@ -59,6 +60,10 @@ class EditorPanel extends React.Component {
         history={this.props.history}
         note={this.note}
         onNewNoteEvent={this.onNewNoteEvent}
+      />,
+      <NoteSyncBar
+        key="sync-status"
+        status={this.props.state.noteSync[this.note.id]}
       />,
       <Editor
         key="editor"

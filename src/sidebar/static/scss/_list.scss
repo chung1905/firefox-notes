@@ -14,10 +14,12 @@
     li {
       box-sizing: border-box;
       list-style: none;
+      // Anchors the .noteSyncBadge inside the row.
+      position: relative;
       button {
         display: block !important;
         color: rgb(132, 132, 132);
-        padding-right: 17px;
+        padding-right: 30px;
         height: 48px;
         font-size: 13px;
         line-height: 17px;

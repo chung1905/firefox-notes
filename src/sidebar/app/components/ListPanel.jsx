@@ -9,6 +9,7 @@ import {
 } from '../utils/constants';
 
 import NewIcon from './icons/NewIcon';
+import { NoteSyncBadge } from './NoteSyncStatus';
 import { setFocusedNote, createNote } from '../actions';
 import { formatLastModified } from '../utils/utils';
 
@@ -38,7 +39,7 @@ class ListPanel extends React.Component {
       if (
         !this.hasRequestedWelcomeNote &&
         state.sync.welcomePage &&
-        state.kinto.isLoaded &&
+        state.isLoaded &&
         state.notes.length === 0
       ) {
         this.hasRequestedWelcomeNote = true;
@@ -116,7 +117,7 @@ class ListPanel extends React.Component {
 
   render() {
     this.noteButtons = [];
-    if (!this.props.state.kinto.isLoaded) return '';
+    if (!this.props.state.isLoaded) return '';
 
     return (
       <div className="listView">
@@ -166,6 +167,9 @@ class ListPanel extends React.Component {
                         </p>
                       </div>
                     )}
+                    <NoteSyncBadge
+                      status={this.props.state.noteSync[note.id]}
+                    />
                   </button>
                 </li>
               );

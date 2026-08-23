@@ -1,11 +1,9 @@
 import { combineReducers } from 'redux';
 import {
-  SYNC_AUTHENTICATED,
-  DISCONNECTED,
   TEXT_SAVED,
   TEXT_SYNCING,
   TEXT_SYNCED,
-  KINTO_LOADED,
+  NOTES_LOADED,
   CREATE_NOTE,
   UPDATE_NOTE,
   DELETE_NOTE,
@@ -15,19 +13,94 @@ import {
 } from './utils/constants';
 
 import { getNoteSummary } from './utils/utils';
+import {
+  SYNCING as NOTE_SYNCING,
+  SYNCED as NOTE_SYNCED,
+  SYNC_ERROR as NOTE_SYNC_ERROR,
+  createStatus,
+  restorePendingStatuses,
+} from './utils/noteSyncState';
+
+function toDate(value) {
+  if (value instanceof Date) return value;
+  return value ? new Date(value) : new Date();
+}
+
+function setNoteStatus(noteSync, id, state, detail) {
+  // Actions that carry no id are round-trip acknowledgements for whatever was
+  // already in flight -- there is no note to attribute them to.
+  if (!id) return noteSync;
+
+  return Object.assign({}, noteSync, { [id]: createStatus(state, detail) });
+}
+
+/**
+ * Sync state per note id, so the list and the editor can show which note is
+ * saved, in flight or failed. The footer's `sync` slice only knows whether
+ * *something* is syncing.
+ */
+function noteSync(noteSync = {}, action) {
+  switch (action.type) {
+    case NOTES_LOADED: {
+      if (!action.notes) return noteSync;
+      if (action.fromCache) return restorePendingStatuses(action.noteSync);
+
+      // Anything storage.sync just handed back is synced by definition,
+      // except the notes reconcileNotes found the sidebar still holds a newer
+      // copy of. Those keep the failure that explains why, or show the retry
+      // notesLoaded fires for them.
+      const unsynced = new Set(action.unsynced);
+      const next = {};
+
+      action.notes.forEach((note) => {
+        const previous = noteSync[note.id];
+
+        if (unsynced.has(note.id)) {
+          next[note.id] =
+            previous && previous.state === NOTE_SYNC_ERROR
+              ? previous
+              : createStatus(NOTE_SYNCING);
+          return;
+        }
+
+        // A save in flight outranks the reload: onSyncChanged fires one for
+        // our own writes too, and it would otherwise flash a checkmark
+        // mid-save.
+        next[note.id] =
+          previous && previous.state === NOTE_SYNCING
+            ? previous
+            : createStatus(NOTE_SYNCED, {
+                syncedAt: toDate(note.lastModified),
+              });
+      });
+
+      return next;
+    }
+    case CREATE_NOTE:
+    case UPDATE_NOTE:
+    case TEXT_SYNCING:
+      return setNoteStatus(noteSync, action.id, NOTE_SYNCING);
+    case TEXT_SYNCED:
+      return setNoteStatus(noteSync, action.id, NOTE_SYNCED, {
+        syncedAt: toDate(action.lastModified),
+      });
+    case ERROR:
+      return setNoteStatus(noteSync, action.id, NOTE_SYNC_ERROR, {
+        message: action.message,
+      });
+    case DELETE_NOTE: {
+      if (!action.id || !(action.id in noteSync)) return noteSync;
+      const next = Object.assign({}, noteSync);
+      delete next[action.id];
+      return next;
+    }
+    default:
+      return noteSync;
+  }
+}
 
 function sync(sync = {}, action) {
   switch (action.type) {
-    case SYNC_AUTHENTICATED:
-      return Object.assign({}, sync, {
-        lastSynced: new Date(),
-        isSyncing: true,
-        error: null,
-      });
-    case DISCONNECTED:
-      return Object.assign({}, sync, {
-        error: null,
-      });
     case DELETE_NOTE:
       return Object.assign({}, sync, {
         isSyncing: action.isSyncing,
@@ -53,7 +126,7 @@ function sync(sync = {}, action) {
         isSyncing: false,
         lastSynced: new Date(),
       });
-    case KINTO_LOADED:
+    case NOTES_LOADED:
       return Object.assign({}, sync, {
         isSyncing: false,
         lastSynced: new Date(),
@@ -72,7 +145,11 @@ function sync(sync = {}, action) {
         isSyncing: !action.isSyncing,
       });
     case ERROR:
+      // The save is over -- it failed. Leaving isSyncing set kept EditorPanel
+      // from refreshing the note it renders, so a window that was handed the
+      // refused edit went on showing the older one until it was reopened.
       return Object.assign({}, sync, {
+        isSyncing: false,
         error: action.message,
       });
     default:
@@ -80,20 +157,20 @@ function sync(sync = {}, action) {
   }
 }
 
-function kinto(kinto = {}, action) {
+// Whether a load has ever landed. The panels render nothing until one has,
+// so the sidebar does not flash an empty note list on the way up.
+function isLoaded(isLoaded = false, action) {
   switch (action.type) {
-    case KINTO_LOADED:
-      return Object.assign({}, kinto, {
-        isLoaded: true,
-      });
+    case NOTES_LOADED:
+      return true;
     default:
-      return kinto;
+      return isLoaded;
   }
 }
 
 function notes(notes = [], action) {
   switch (action.type) {
-    case KINTO_LOADED: {
+    case NOTES_LOADED: {
       if (action.notes) {
         const list = Array.from(action.notes);
         list.map((note) => {
@@ -164,8 +241,9 @@ function notes(notes = [], action) {
 
 const noteApp = combineReducers({
   sync,
-  kinto,
+  isLoaded,
   notes,
+  noteSync,
 });
 
 export default noteApp;

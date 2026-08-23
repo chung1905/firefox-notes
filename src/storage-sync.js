@@ -1,8 +1,9 @@
 /**
  * Storage Sync Module
  *
- * Handles syncing notes using browser.storage.sync API.
- * This replaces the Kinto-based sync with a simpler, built-in solution.
+ * Handles syncing notes using browser.storage.sync API. There is no server
+ * and no account to sign in to: the browser carries the notes between
+ * profiles on its own.
  *
  * Limits:
  * - Max item size: 8KB (we enforce 6KB to be safe)
@@ -11,9 +12,7 @@
  */
 
 const NOTE_PREFIX = 'note_';
-const META_KEY = '_meta';
 const MAX_NOTE_SIZE = 6 * 1024; // 6KB per note
-const MAX_TOTAL_STORAGE = 102400; // 100KB total
 
 class NoteTooLargeError extends Error {
   constructor(actual, max) {
@@ -100,35 +99,6 @@ async function deleteNote(id) {
 }
 
 /**
- * Get storage usage information
- * @returns {Promise<Object>} Usage info with used, total, percentage
- */
-async function getUsage() {
-  const bytesInUse = await browser.storage.sync.getBytesInUse(null);
-  return {
-    used: bytesInUse,
-    total: MAX_TOTAL_STORAGE,
-    percentage: (bytesInUse / MAX_TOTAL_STORAGE) * 100,
-  };
-}
-
-/**
- * Check if sync is available (user has Firefox Account with Add-ons sync enabled)
- * Note: There's no direct API to check this, so we assume it's available
- * @returns {Promise<boolean>}
- */
-async function isSyncAvailable() {
-  try {
-    // Try to access storage.sync - if it works, sync is available
-    await browser.storage.sync.get(META_KEY);
-    return true;
-  } catch (error) {
-    console.error('Sync not available:', error); // eslint-disable-line no-console
-    return false;
-  }
-}
-
-/**
  * Set up listener for sync changes from other devices
  * @param {Function} callback - Called with array of changed notes
  */
@@ -176,45 +146,15 @@ function onSyncChanged(callback) {
   });
 }
 
-/**
- * Update metadata
- * @param {Object} meta - Metadata to store
- */
-async function updateMeta(meta) {
-  const existing = await browser.storage.sync.get(META_KEY);
-  await browser.storage.sync.set({
-    [META_KEY]: {
-      ...existing[META_KEY],
-      ...meta,
-      lastSync: Date.now(),
-    },
-  });
-}
-
-/**
- * Get metadata
- * @returns {Promise<Object>}
- */
-async function getMeta() {
-  const data = await browser.storage.sync.get(META_KEY);
-  return data[META_KEY] || {};
-}
-
 // Export for use in background.js
-// Using window assignment for non-module scripts
+// Using window assignment for non-module scripts. This is everything
+// background.js reaches for; the error classes stay unexported because it
+// matches on error.name.
 if (typeof window !== 'undefined') {
   window.storageSync = {
     loadNotes,
     saveNote,
     deleteNote,
-    getUsage,
-    isSyncAvailable,
     onSyncChanged,
-    updateMeta,
-    getMeta,
-    NoteTooLargeError,
-    StorageLimitError,
-    MAX_NOTE_SIZE,
-    MAX_TOTAL_STORAGE,
   };
 }

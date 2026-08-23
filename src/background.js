@@ -21,13 +21,13 @@ async function loadAndSendNotes() {
   try {
     const notes = await storageSync.loadNotes();
     browser.runtime.sendMessage({
-      action: 'kinto-loaded', // Keep action name for compatibility
+      action: 'notes-loaded',
       notes,
     });
   } catch (e) {
     console.error('Failed to load notes:', e); // eslint-disable-line no-console
     browser.runtime.sendMessage({
-      action: 'kinto-loaded',
+      action: 'notes-loaded',
       notes: [],
     });
   }
@@ -38,26 +38,7 @@ async function loadAndSendNotes() {
  */
 browser.runtime.onMessage.addListener(function (eventData) {
   switch (eventData.action) {
-    case 'authenticate':
-      // With storage.sync, we don't need authentication
-      // Just load notes directly
-      browser.runtime.sendMessage({
-        action: 'sync-authenticated',
-        profile: { email: '' }, // No email needed
-      });
-      loadAndSendNotes();
-      break;
-
-    case 'disconnected':
-      // With storage.sync, disconnect just clears local state
-      // Notes remain in storage.sync
-      browser.runtime.sendMessage({
-        action: 'disconnected',
-      });
-      break;
-
-    case 'kinto-load':
-    case 'kinto-sync':
+    case 'load-notes':
       loadAndSendNotes();
       break;
 
@@ -79,13 +60,18 @@ browser.runtime.onMessage.addListener(function (eventData) {
           });
         })
         .catch((error) => {
-          handleSaveError(error);
+          handleSaveError(error, {
+            id: eventData.id,
+            content: eventData.content,
+            lastModified: eventData.lastModified,
+          });
         });
       break;
 
     case 'update-note':
       browser.runtime.sendMessage({
         action: 'text-syncing',
+        id: eventData.note.id,
       });
 
       storageSync
@@ -104,7 +90,7 @@ browser.runtime.onMessage.addListener(function (eventData) {
           });
         })
         .catch((error) => {
-          handleSaveError(error);
+          handleSaveError(error, eventData.note, eventData.from);
         });
       break;
 
@@ -122,51 +108,42 @@ browser.runtime.onMessage.addListener(function (eventData) {
         action: 'theme-changed',
       });
       break;
-
-    case 'fetch-email':
-      // No email to fetch with storage.sync
-      browser.runtime.sendMessage({
-        action: 'sync-authenticated',
-        profile: { email: '' },
-      });
-      break;
-
-    case 'get-storage-usage':
-      storageSync.getUsage().then((usage) => {
-        browser.runtime.sendMessage({
-          action: 'storage-usage',
-          usage,
-        });
-      });
-      break;
   }
 });
 
 /**
  * Handle save errors
+ *
+ * The note travels with the failure, not just its id. Sidebars key their
+ * per-note indicator on the id, and every window has to end up holding the
+ * edit storage.sync refused: they all write the same storage.local cache, so
+ * a window still showing the last saved copy would write that stale copy over
+ * the edit and lose it. Only success used to be broadcast, which is exactly
+ * the case where nothing is at risk.
  */
-function handleSaveError(error) {
+function handleSaveError(error, note, from) {
+  let message;
+
   if (error.name === 'NoteTooLargeError') {
-    browser.runtime.sendMessage({
-      action: 'error',
-      message:
-        browser.i18n.getMessage('noteTooLarge') ||
-        'Note is too large to sync. Please reduce the content size.',
-    });
+    message =
+      browser.i18n.getMessage('noteTooLarge') ||
+      'Note is too large to sync. Please reduce the content size.';
   } else if (error.name === 'StorageLimitError') {
-    browser.runtime.sendMessage({
-      action: 'error',
-      message:
-        browser.i18n.getMessage('insufficientStorage') ||
-        'Storage limit reached. Please delete some notes.',
-    });
+    message =
+      browser.i18n.getMessage('insufficientStorage') ||
+      'Storage limit reached. Please delete some notes.';
   } else {
     console.error('Save error:', error); // eslint-disable-line no-console
-    browser.runtime.sendMessage({
-      action: 'error',
-      message: error.message,
-    });
+    message = error.message;
   }
+
+  browser.runtime.sendMessage({
+    action: 'error',
+    id: note && note.id,
+    note,
+    from,
+    message,
+  });
 }
 
 /**

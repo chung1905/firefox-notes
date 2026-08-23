@@ -37,9 +37,6 @@ const storeState = (store) => {
   };
 };
 
-const store = createStore(
-  notesApp,
-  applyMiddleware(storeState, thunk),
-);
+const store = createStore(notesApp, applyMiddleware(storeState, thunk));
 
 export default store;

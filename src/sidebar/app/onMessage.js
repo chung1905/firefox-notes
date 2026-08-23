@@ -1,24 +1,20 @@
 import {
-  SYNC_AUTHENTICATED,
-  KINTO_LOADED,
+  NOTES_LOADED,
   TEXT_SAVED,
   TEXT_SYNCING,
   TEXT_SYNCED,
   CREATE_NOTE,
   DELETE_NOTE,
-  DISCONNECTED,
   ERROR,
 } from './utils/constants';
 // Actions
 import {
-  authenticate,
-  disconnect,
   createdNote,
   deletedNote,
   saved,
   syncing,
   synced,
-  kintoLoad,
+  notesLoaded,
   updatedNote,
   error,
 } from './actions';
@@ -34,20 +30,19 @@ chrome.runtime.onMessage.addListener((eventData) => {
     //
     // SYNC EVENTS
     //
-    case SYNC_AUTHENTICATED:
-      store.dispatch(authenticate());
-      break;
-    case KINTO_LOADED:
+    case NOTES_LOADED:
       if (!eventData.notes) {
-        store.dispatch(kintoLoad());
+        store.dispatch(notesLoaded());
       } else {
-        store.dispatch(kintoLoad(eventData.notes));
+        store.dispatch(notesLoaded(eventData.notes));
       }
       break;
     case CREATE_NOTE:
       store.dispatch(createdNote());
       setTimeout(() => {
-        store.dispatch(synced()); // stop syncing animation
+        // createdNote() carries no id on purpose (the notes reducer would
+        // re-add the note without content), so the note is marked synced here.
+        store.dispatch(synced(null, eventData.id)); // stop syncing animation
       }, 750);
       break;
     case DELETE_NOTE:
@@ -68,7 +63,7 @@ chrome.runtime.onMessage.addListener((eventData) => {
       });
       break;
     case TEXT_SYNCING:
-      store.dispatch(syncing());
+      store.dispatch(syncing(eventData.id));
       break;
     case TEXT_SYNCED:
       browser.windows.getCurrent({ populate: true }).then((windowInfo) => {
@@ -81,17 +76,36 @@ chrome.runtime.onMessage.addListener((eventData) => {
                 eventData.note.lastModified,
               ),
             );
-            store.dispatch(synced());
+            store.dispatch(
+              synced(null, eventData.note.id, eventData.note.lastModified),
+            );
           }
         }
       });
-      store.dispatch(synced());
+      store.dispatch(
+        synced(
+          null,
+          eventData.note && eventData.note.id,
+          eventData.note && eventData.note.lastModified,
+        ),
+      );
       break;
     case ERROR:
-      store.dispatch(error(eventData.message));
-      break;
-    case DISCONNECTED:
-      store.dispatch(disconnect());
+      // A refused save still has to reach the other windows: their copy of
+      // the note is stale from here on, and whichever sidebar writes the
+      // shared storage.local cache last would otherwise erase the edit.
+      browser.windows.getCurrent({ populate: true }).then((windowInfo) => {
+        if (eventData.note && eventData.from !== windowInfo.id) {
+          store.dispatch(
+            updatedNote(
+              eventData.note.id,
+              eventData.note.content,
+              eventData.note.lastModified,
+            ),
+          );
+        }
+        store.dispatch(error(eventData.message, eventData.id));
+      });
       break;
   }
 });

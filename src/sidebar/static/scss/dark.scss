@@ -5,15 +5,20 @@
 // recalculation rather than a stylesheet fetch and parse.
 // app.js imports this after styles.scss to keep the original cascade order.
 [data-theme='dark'] {
-    --main-bg-color: hsla(221deg, 14%, 25%, 1);
-    --main-offset-bg-color: hsla(221deg, 14%, 24%, 1);
-    --main-bg-hover-color: hsla(221deg, 14%, 22%, 1);
-    --main-bg-focus-color: hsla(221deg, 14%, 19%, 1);
-    --main-bg-active-color: hsla(221deg, 14%, 19%, 1);
+  --main-bg-color: hsla(221deg, 14%, 25%, 1);
+  --main-offset-bg-color: hsla(221deg, 14%, 24%, 1);
+  --main-bg-hover-color: hsla(221deg, 14%, 22%, 1);
+  --main-bg-focus-color: hsla(221deg, 14%, 19%, 1);
+  --main-bg-active-color: hsla(221deg, 14%, 19%, 1);
 
-    --primary-font-color: hsla(221deg, 14%, 90%, 1);
-    --secondary-font-color: hsla(221deg, 14%, 60%, 1);
-    --border-color: hsla(221deg, 14%, 45%, 1);
+  --primary-font-color: hsla(221deg, 14%, 90%, 1);
+  --secondary-font-color: hsla(221deg, 14%, 60%, 1);
+  --border-color: hsla(221deg, 14%, 45%, 1);
+
+  --note-sync-idle-color: var(--secondary-font-color);
+  --note-sync-progress-color: #4e92dd;
+  --note-sync-ok-color: #86de74;
+  --note-sync-error-color: #ff9aa2;
 
   body {
     background-color: var(--main-bg-color);
@@ -196,6 +201,11 @@
     color: var(--primary-font-color);
   }
 
+  .noteSyncBar {
+    background: var(--main-bg-color);
+    border-color: var(--border-color);
+  }
+
   header,
   footer,
   .btn.fullWidth.borderBottom {
@@ -215,6 +225,12 @@
 
   .btn.fullWidth.borderBottom svg path {
     fill: var(--primary-font-color);
+  }
+
+  // The rule above is specific enough to repaint the sync badge inside a note
+  // row, which has to keep the colour of the state it is reporting.
+  .btn.fullWidth.borderBottom .noteSyncStatus svg path {
+    fill: currentColor;
   }
 
   .btn.fullWidth.borderBottom:hover,

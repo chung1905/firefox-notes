@@ -122,13 +122,13 @@ class Footer extends React.Component {
     this.triggerSync = () => {
       if (!this.getFooterState(this.props.state).isClickable) return;
       browser.runtime.sendMessage({
-        action: 'kinto-sync',
+        action: 'load-notes',
       });
     };
   }
 
   render() {
-    if (!this.props.state.kinto.isLoaded) return '';
+    if (!this.props.state.isLoaded) return '';
 
     const currentState = this.getFooterState(this.props.state);
     const footerClass = [

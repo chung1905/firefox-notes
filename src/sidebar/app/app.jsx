@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 
 import store from './store';
-import { kintoLoad, requestWelcomeNote } from './actions';
+import { notesLoadedFromCache, requestWelcomeNote } from './actions';
 
 import Router from './router';
 import Footer from './components/Footer';
@@ -40,7 +40,7 @@ browser.storage.local.get().then((result) => {
   const state = JSON.parse(result.redux || '{}');
 
   if (state.notes) {
-    store.dispatch(kintoLoad(state.notes));
+    store.dispatch(notesLoadedFromCache(state));
   }
 
   // Render root DOM element
@@ -56,5 +56,5 @@ browser.storage.local.get().then((result) => {
 
 // Request sync on load
 chrome.runtime.sendMessage({
-  action: 'kinto-sync',
+  action: 'load-notes',
 });

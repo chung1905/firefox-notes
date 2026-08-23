@@ -2,13 +2,13 @@
 export const SURVEY_PATH = 'https://qsurvey.mozilla.com/s3/notes?ref=sidebar';
 
 // Actions
-// FOR LEGACY, THOSE STRING MATCH THE ONE USED IN BACKGROUND.js
-export const SYNC_AUTHENTICATED = 'sync-authenticated';
-export const KINTO_LOADED = 'kinto-loaded';
+// These are Redux action types *and* the browser.runtime message names
+// background.js broadcasts: changing one changes both the wire protocol and
+// the reducer that reads it.
+export const NOTES_LOADED = 'notes-loaded';
 export const TEXT_SAVED = 'text-saved';
 export const TEXT_SYNCING = 'text-syncing';
 export const TEXT_SYNCED = 'text-synced';
-export const DISCONNECTED = 'disconnected';
 export const SEND_TO_NOTES = 'send-to-notes';
 export const EXPORT_HTML = 'export-html';
 
