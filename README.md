@@ -20,7 +20,10 @@ is still available to it. This fork replaces that and modernises the stack:
   default**; notes always live in `browser.storage.local`.
 - **No telemetry and no outbound requests.** Google Analytics went upstream in
   4.3.4; the Mozilla survey link behind the "Give Feedback" menu item is gone
-  in 4.4.0. The add-on now makes no network requests at all.
+  in 4.4.0. The add-on now makes no network requests at all. The one `fetch`
+  left in the bundle is CKEditor's usage reporting, which never fires under the
+  GPL licence key — the endpoint it posts to only exists inside a decoded
+  commercial licence.
 - **Current toolchain**: Vite 8, React 19 API via `preact/compat`, Redux 5,
   CKEditor 5. No Babel, no Karma, no TypeScript.
 - **A dark theme** that follows a setting on the options page.
@@ -47,6 +50,11 @@ need it, and Node 18 does not work.
 
 `src/_locales/` is generated from `locales/*/notes.properties` by
 `npm run postinstall` and is not checked in; the build fails without it.
+
+`test:ui` needs a Firefox that will install an unsigned add-on — Developer
+Edition, Nightly or ESR. Release Firefox ignores
+`xpinstall.signatures.required=false` and fails every case in `beforeEach`
+with `ERROR_SIGNEDSTATE_REQUIRED`.
 
 ## Reproducible build
 
