@@ -21,10 +21,6 @@ const INITIAL_CONTENT = `
     <li>${browser.i18n.getMessage('welcomeNumbered').replace(/ `/g, ' <code>').replace(/`/g, '</code>')}</li>
     <li>${browser.i18n.getMessage('welcomeCode').replace(/ ``/g, ' <code>`').replace(/``/g, '`</code>')}</li>
   </ul>
-  <p><strong>${browser.i18n.getMessage('welcomeSuggestion')}</strong></p>
-  <ul>
-    <li>${browser.i18n.getMessage('welcomeGiveFeedback', '<strong>' + browser.i18n.getMessage('feedback') + '</strong>')}</li>
-  </ul>
   <p>${browser.i18n.getMessage('welcomeThatsIt')}</p>
 `
   .replace(/(?:\n(?:\s*))+/g, '')

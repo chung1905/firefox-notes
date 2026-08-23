@@ -4,8 +4,6 @@ import { connect } from 'react-redux';
 import ArrowLeftIcon from './icons/ArrowLeftIcon';
 import MoreIcon from './icons/MoreIcon';
 
-import { SURVEY_PATH } from '../utils/constants';
-
 import { exportHTML, deleteNote } from '../actions';
 
 class Header extends React.Component {
@@ -72,15 +70,6 @@ class Header extends React.Component {
 
     this.exportAsHTML = () =>
       props.dispatch(exportHTML(this.props.note.content));
-
-    this.giveFeedbackCallback = (e) => {
-      e.preventDefault();
-      browser.runtime.getBrowserInfo().then((info) => {
-        browser.tabs.create({
-          url: `${SURVEY_PATH}&ver=${browser.runtime.getManifest().version}&release=${info.version}`,
-        });
-      });
-    };
 
     this.onDelete = () => {
       props.dispatch(deleteNote(this.props.note.id, 'in-note'));
@@ -149,16 +138,6 @@ class Header extends React.Component {
                   onClick={this.onDelete}
                 >
                   {browser.i18n.getMessage('deleteNote')}
-                </button>
-              </li>
-              <li>
-                <button
-                  role="menuitem"
-                  ref={(btn) => (btn ? this.buttons.push(btn) : null)}
-                  title={browser.i18n.getMessage('feedback')}
-                  onClick={this.giveFeedbackCallback}
-                >
-                  {browser.i18n.getMessage('feedback')}
                 </button>
               </li>
             </ul>

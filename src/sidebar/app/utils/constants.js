@@ -1,6 +1,3 @@
-// Url to open in firefox to give feedback
-export const SURVEY_PATH = 'https://qsurvey.mozilla.com/s3/notes?ref=sidebar';
-
 // Actions
 // These are Redux action types *and* the browser.runtime message names
 // background.js broadcasts: changing one changes both the wire protocol and
