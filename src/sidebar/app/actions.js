@@ -10,6 +10,7 @@ import {
   FOCUS_NOTE,
   ERROR,
   REQUEST_WELCOME_PAGE,
+  SYNC_SETTING_CHANGED,
 } from './utils/constants';
 
 import INITIAL_CONTENT from './data/initialContent';
@@ -207,4 +208,11 @@ export function requestWelcomeNote() {
 
 export function error(message, id) {
   return { type: ERROR, message, id };
+}
+
+// Mirrors storage.local.syncEnabled into the store. Nothing about saving
+// changes with it -- background.js decides where a note goes -- but the UI
+// has to stop reporting a save that stayed on this device as a sync.
+export function syncSettingChanged(syncEnabled) {
+  return { type: SYNC_SETTING_CHANGED, syncEnabled };
 }

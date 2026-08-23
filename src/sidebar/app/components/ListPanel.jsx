@@ -169,6 +169,7 @@ class ListPanel extends React.Component {
                     )}
                     <NoteSyncBadge
                       status={this.props.state.noteSync[note.id]}
+                      syncEnabled={this.props.state.syncEnabled}
                     />
                   </button>
                 </li>

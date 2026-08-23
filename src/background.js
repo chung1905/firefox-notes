@@ -3,7 +3,8 @@
  * Background script for Firefox Notes
  *
  * Handles:
- * - Note sync via browser.storage.sync
+ * - Note storage, synced through browser.storage.sync unless the settings
+ *   page has switched syncing off
  * - Context menu for "Send to Notes"
  * - Sidebar open/close
  */
@@ -108,6 +109,10 @@ browser.runtime.onMessage.addListener(function (eventData) {
         action: 'theme-changed',
       });
       break;
+
+    case 'set-sync-enabled':
+      applySyncSetting(eventData.enabled);
+      break;
   }
 });
 
@@ -144,6 +149,29 @@ function handleSaveError(error, note, from) {
     from,
     message,
   });
+}
+
+/**
+ * Turn syncing on or off on behalf of the settings page.
+ *
+ * The sidebars are told, so they stop calling a local save a sync, and the
+ * list is reloaded because switching sync on can pull in notes another device
+ * left in storage.sync. Notes that would not fit there are reported one by
+ * one, the way a refused save is: each keeps its own flag, and none of them
+ * is lost -- storage.local still holds them and loadNotes still lists them.
+ */
+function applySyncSetting(enabled) {
+  storageSync
+    .setSyncEnabled(enabled)
+    .then((failures) => {
+      browser.runtime.sendMessage({
+        action: 'sync-setting-changed',
+        syncEnabled: enabled,
+      });
+      failures.forEach(({ note, error }) => handleSaveError(error, note));
+      loadAndSendNotes();
+    })
+    .catch((error) => handleSaveError(error, null));
 }
 
 /**

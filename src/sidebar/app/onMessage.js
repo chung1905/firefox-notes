@@ -6,6 +6,7 @@ import {
   CREATE_NOTE,
   DELETE_NOTE,
   ERROR,
+  SYNC_SETTING_CHANGED,
 } from './utils/constants';
 // Actions
 import {
@@ -17,6 +18,7 @@ import {
   notesLoaded,
   updatedNote,
   error,
+  syncSettingChanged,
 } from './actions';
 import store from './store';
 
@@ -106,6 +108,9 @@ chrome.runtime.onMessage.addListener((eventData) => {
         }
         store.dispatch(error(eventData.message, eventData.id));
       });
+      break;
+    case SYNC_SETTING_CHANGED:
+      store.dispatch(syncSettingChanged(eventData.syncEnabled));
       break;
   }
 });

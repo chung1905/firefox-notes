@@ -3,7 +3,11 @@ import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 
 import store from './store';
-import { notesLoadedFromCache, requestWelcomeNote } from './actions';
+import {
+  notesLoadedFromCache,
+  requestWelcomeNote,
+  syncSettingChanged,
+} from './actions';
 
 import Router from './router';
 import Footer from './components/Footer';
@@ -36,6 +40,10 @@ browser.storage.local.get().then((result) => {
   if (!result.redux) {
     store.dispatch(requestWelcomeNote());
   }
+
+  // Seeded before the first render: the setting is not part of the cached
+  // store, and the footer would otherwise open claiming a sync that is off.
+  store.dispatch(syncSettingChanged(result.syncEnabled === true));
 
   const state = JSON.parse(result.redux || '{}');
 

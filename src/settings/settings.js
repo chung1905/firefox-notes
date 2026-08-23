@@ -7,6 +7,19 @@ themeLegend.innerHTML = browser.i18n.getMessage('themeLegend');
 defaultThemeLabel.innerHTML = browser.i18n.getMessage('defaultThemeTitle');
 darkThemeLabel.innerHTML = browser.i18n.getMessage('darkThemeTitle');
 
+const syncTitle = document.getElementById('syncTitle');
+const syncCheckbox = document.getElementById('sync_enabled');
+const syncEnabledLabel = document.getElementById('sync_enabled_label');
+const syncHint = document.getElementById('syncHint');
+
+syncTitle.textContent = browser.i18n.getMessage('syncNotes') || 'Sync';
+// These two have no Pontoon string yet. Translations are managed there rather
+// than by PR, so the copy ships in English until it lands upstream.
+syncEnabledLabel.textContent = 'Sync notes across your devices';
+syncHint.textContent =
+  'Copies your notes to your other devices and keeps them in step. ' +
+  'Left off, notes stay on this device.';
+
 const themeRadioBtn = document.getElementsByName('theme');
 
 function loadSavedData(data) {
@@ -14,10 +27,13 @@ function loadSavedData(data) {
 
   if (theme === 'default') themeRadioBtn[0].checked = true;
   else if (theme === 'dark') themeRadioBtn[1].checked = true;
+
+  // Absent means off, the same reading storage-sync.js takes.
+  syncCheckbox.checked = data.syncEnabled === true;
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-  const savedData = browser.storage.local.get('theme');
+  const savedData = browser.storage.local.get(['theme', 'syncEnabled']);
   savedData.then(loadSavedData);
 });
 
@@ -46,3 +62,13 @@ for (let i = 0; i < themeRadioBtn.length; i++) {
     });
   };
 }
+
+// background.js owns this write rather than the settings page: switching sync
+// on also has to push the notes storage.sync doesn't have yet, and only the
+// background script has storageSync.
+syncCheckbox.onchange = function () {
+  browser.runtime.sendMessage({
+    action: 'set-sync-enabled',
+    enabled: syncCheckbox.checked,
+  });
+};

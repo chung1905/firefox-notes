@@ -16,3 +16,19 @@ label#themeTitle {
   display: inline-block;
   width: 33%;
 }
+
+#section-sync {
+  margin-top: 1.5em;
+}
+
+label#syncTitle {
+  display: inline-block;
+  width: 33%;
+}
+
+p#syncHint {
+  color: #666;
+  font-size: 0.9em;
+  margin: 0.5em 0 0 33%;
+  max-width: 40em;
+}

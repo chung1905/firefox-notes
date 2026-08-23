@@ -9,8 +9,10 @@ A Manifest V2 Firefox extension (115+) providing a note-taking sidebar.
 
 - **WebExtension** (`src/`): React 19 API rendered by Preact + Redux, with
   CKEditor 5 for rich text.
-- **Sync**: `browser.storage.sync` (`src/storage-sync.js`). The old Kinto +
-  Firefox Accounts implementation has been deleted.
+- **Storage**: `browser.storage.local`, with `browser.storage.sync` layered on
+  top when the settings page switches syncing on — it is **off by default**
+  (`src/storage-sync.js`). The old Kinto + Firefox Accounts implementation has
+  been deleted.
 - **Native app** (`native/`): abandoned React Native Android companion, still on
   the old Kinto stack. Excluded from ESLint and out of scope — don't modernize
   it as a side effect.
@@ -79,10 +81,11 @@ reducer.
 `constants.js` is only half the protocol: it holds what the background
 *broadcasts* to sidebars. Requests going the other way are inline literals —
 `app.jsx` and `Footer.jsx` send `load-notes`, `ListPanel.jsx` sends
-`editor-ready`, `settings/settings.js` sends `theme-changed` — and none of
-those appear in `constants.js`. Read the switch in `background.js` for the
-full list before assuming a message name is unused; every case in it is
-reachable, so a name that no sidebar sends is a bug, not a spare.
+`editor-ready`, `settings/settings.js` sends `theme-changed` and
+`set-sync-enabled` — and none of those appear in `constants.js`. Read the
+switch in `background.js` for the full list before assuming a message name is
+unused; every case in it is reachable, so a name that no sidebar sends is a
+bug, not a spare.
 
 Nothing in the protocol is named after Kinto or Firefox Accounts any more. The
 request is `load-notes` and the broadcast is `notes-loaded` (`NOTES_LOADED`);
@@ -90,6 +93,9 @@ request is `load-notes` and the broadcast is `notes-loaded` (`NOTES_LOADED`);
 gone, along with the empty profile `background.js` used to answer them with.
 Sync is `storage.sync` and there is nothing to sign in to, so a message name
 that implies an account is a mistake, not a compatibility shim.
+`set-sync-enabled` is the settings page asking to switch syncing on or off,
+and the broadcast that answers it is `sync-setting-changed`
+(`SYNC_SETTING_CHANGED`); neither has anything to sign in to either.
 
 Because every window's sidebar receives every message, actions carry
 `from: windowInfo.id` and `onMessage.js` compares it against
@@ -108,8 +114,28 @@ storage.local note below for what a window left holding a stale copy does.
 
 ### Three storage layers
 
-1. `browser.storage.sync` — source of truth, one key per note (`note_<id>`).
-   Two limits: `storage-sync.js` measures each note against 6 KB itself
+1. The notes themselves, one key per note (`note_<id>`) — in
+   `browser.storage.local`, and in `browser.storage.sync` once syncing has
+   been switched on. Source of truth either way; layers 2 and 3 are caches of
+   it.
+
+   Syncing is **off by default**: `storage.local.syncEnabled`, absent meaning
+   off, and only a literal `true` counting as on. The setting redirects
+   *writes* only — `loadNotes` unions both areas on every load, newest
+   `lastModified` winning and ties going to the synced copy. That is
+   deliberate: flipping the setting migrates nothing, so it can't
+   half-migrate, and a note the other area still holds stays listed. It is
+   also what makes the default safe for a profile that synced before the
+   setting existed — its notes go on being listed out of `storage.sync`, they
+   just stop being added to. Two consequences to keep: a delete has to remove
+   the key from **both** areas or the load hands it straight back, and
+   `onSyncChanged` listens on both for the same reason. Switching sync on
+   pushes what `storage.sync` doesn't have yet, reporting per-note failures
+   rather than throwing, since a note too large for sync is still safe in
+   `storage.local`.
+
+   Two limits come with `storage.sync`, and apply only to what is written
+   there: `storage-sync.js` measures each note against 6 KB itself
    (`NoteTooLargeError`), while the 100 KB total is the browser's and arrives
    as a `QUOTA_BYTES` rejection that `saveNote` translates into
    `StorageLimitError`. Nothing tracks usage ahead of that. Both are
@@ -138,6 +164,16 @@ local copy still loses — last write wins, unchanged), reports those ids back a
 `unsynced` so they stay flagged, and `notesLoaded` retries each one. Without that
 step the sync load quietly restored the last saved version and the failed edit
 was gone.
+
+With syncing off the sidebar shows no sync state at all: `getFooterState`
+returns null so the footer renders only its menu, and `describeNoteSync`
+returns null for every state but `SYNC_ERROR` — including `NoteSyncBar`'s
+empty placeholder, which reserves room for a status that is on its way and so
+has nothing to reserve here. Failures are the exception on
+purpose — a `storage.local` write can be refused too, and a save that failed
+silently is the thing this UI exists to prevent. Don't reintroduce a "saved"
+tick there; the checkmark and the spinner are reporting a round trip that
+isn't happening.
 
 ### Routing and views
 
@@ -215,13 +251,17 @@ strings come from `browser.i18n.getMessage('key')`.
   runs `pontoon-to-webext` over `locales/*/notes.properties`. Edit neither
   directory by hand: translations are managed in Pontoon, not by PR.
   `vite.config.mjs` throws if `src/_locales` is missing — run
-  `npm run postinstall`.
+  `npm run postinstall`. New UI copy therefore can't ship translated: reuse an
+  existing key where one fits, and otherwise write the English inline, as the
+  footer's menu and the settings page's sync section do.
 - **Theming is an attribute, not a stylesheet.** `dark.scss` is bundled and
   scoped to `[data-theme='dark']`; `utils/theme.js` sets
   `document.documentElement.dataset.theme`. `app.jsx` imports `dark.scss` after
   `styles.scss` on purpose — that import order *is* the cascade order. A
   separate dark stylesheet would bring back the light-theme flash.
-  The settings page drives the switch: `settings/settings.js` (a classic script,
+  The settings page drives the switch — and the sync toggle beside it, which
+  goes through `set-sync-enabled` so `background.js` owns the write:
+  `settings/settings.js` (a classic script,
   copied verbatim, not bundled) writes `storage.local.theme` and sends
   `theme-changed`, `background.js` rebroadcasts it, and `utils/theme.js` re-reads
   storage. Moving where the theme lives means touching all three.

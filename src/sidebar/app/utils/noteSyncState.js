@@ -54,10 +54,17 @@ export function restorePendingStatuses(cached = {}) {
  * the note has no status yet, e.g. a new note that has never been saved.
  *
  * @param {?NoteSyncStatus} status
+ * @param {boolean} [syncEnabled] Whether saves are reaching storage.sync.
  * @returns {?{state: string, label: string, title: string}}
  */
-export function describeNoteSync(status) {
+export function describeNoteSync(status, syncEnabled = false) {
   if (!status) return null;
+
+  // With syncing off there is no sync to report on: the note went to this
+  // device and nowhere else, and a write that stays here is done before an
+  // indicator could paint it. A failure still has something to say -- a local
+  // save can be refused too -- so it is the one state that survives.
+  if (!syncEnabled && status.state !== SYNC_ERROR) return null;
 
   switch (status.state) {
     case SYNCING: {
@@ -71,7 +78,9 @@ export function describeNoteSync(status) {
       return { state: SYNCED, label, title: label };
     }
     case SYNC_ERROR: {
-      const label = browser.i18n.getMessage('syncError') || 'Sync error';
+      const label = syncEnabled
+        ? browser.i18n.getMessage('syncError') || 'Sync error'
+        : 'Save error';
       return { state: SYNC_ERROR, label, title: status.message || label };
     }
     default:

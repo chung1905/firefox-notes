@@ -64,6 +64,7 @@ class EditorPanel extends React.Component {
       <NoteSyncBar
         key="sync-status"
         status={this.props.state.noteSync[this.note.id]}
+        syncEnabled={this.props.state.syncEnabled}
       />,
       <Editor
         key="editor"

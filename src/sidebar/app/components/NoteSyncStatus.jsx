@@ -27,10 +27,11 @@ function StateIcon({ state }) {
 /**
  * Icon-only indicator for a row of the note list.
  *
- * @param {{status: ?import('../utils/noteSyncState').NoteSyncStatus}} props
+ * @param {{status: ?import('../utils/noteSyncState').NoteSyncStatus,
+ *          syncEnabled: boolean}} props
  */
-export function NoteSyncBadge({ status }) {
-  const described = describeNoteSync(status);
+export function NoteSyncBadge({ status, syncEnabled }) {
+  const described = describeNoteSync(status, syncEnabled);
   if (!described) return null;
 
   return (
@@ -46,14 +47,20 @@ export function NoteSyncBadge({ status }) {
 }
 
 /**
- * Icon and label for the note being edited. The element is rendered even
- * with no status so the live region exists before the first save, and so the
- * editor does not shift down when the indicator appears.
+ * Icon and label for the note being edited. With a status still to come the
+ * element is rendered empty, so the live region exists before the first save
+ * and the editor does not shift down when the indicator appears.
  *
- * @param {{status: ?import('../utils/noteSyncState').NoteSyncStatus}} props
+ * @param {{status: ?import('../utils/noteSyncState').NoteSyncStatus,
+ *          syncEnabled: boolean}} props
  */
-export function NoteSyncBar({ status }) {
-  const described = describeNoteSync(status);
+export function NoteSyncBar({ status, syncEnabled }) {
+  const described = describeNoteSync(status, syncEnabled);
+
+  // That placeholder is holding room for a status about to arrive. With
+  // syncing off only a failure ever arrives, so there is nothing to hold room
+  // for and an empty bar is just a blank line ruled across the editor.
+  if (!syncEnabled && !described) return null;
 
   return (
     <div

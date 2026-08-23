@@ -37,11 +37,18 @@ class Footer extends React.Component {
       },
     };
 
+    // null means the footer reports nothing and renders only its menu.
     this.getFooterState = (state) => {
       if (state.sync.error) {
         // Return a copy: mutating this.STATES.ERROR leaked the message into
         // every later render.
         return { ...this.STATES.ERROR, text: () => state.sync.error };
+      } else if (!state.syncEnabled) {
+        // Nothing is being synced, so there is no sync state to report -- and
+        // a sync icon over a note that never leaves the device is a lie about
+        // where it went. A failure is still worth the room, which is why it
+        // is tested first.
+        return null;
       } else if (state.sync.isSyncing) {
         return this.STATES.SYNCING;
       } else if (state.sync.lastSynced) {
@@ -120,11 +127,46 @@ class Footer extends React.Component {
     };
 
     this.triggerSync = () => {
-      if (!this.getFooterState(this.props.state).isClickable) return;
+      const currentState = this.getFooterState(this.props.state);
+      if (!currentState || !currentState.isClickable) return;
       browser.runtime.sendMessage({
         action: 'load-notes',
       });
     };
+  }
+
+  renderStatus(currentState) {
+    if (currentState.yellowBackground) {
+      return (
+        <button
+          className="fullWidth"
+          title={currentState.text ? currentState.text() : ''}
+          onClick={(e) => this.triggerSync(e)}
+        >
+          <WarningIcon />
+          <span>{currentState.text()}</span>
+        </button>
+      );
+    }
+
+    return (
+      <div
+        className={
+          currentState.isClickable ? 'isClickable btnWrapper' : 'btnWrapper'
+        }
+      >
+        <button
+          id="trigger-sync"
+          disabled={!currentState.isClickable}
+          onClick={(e) => this.triggerSync(e)}
+          title={browser.i18n.getMessage('syncNotes') || 'Sync notes'}
+          className="iconBtn"
+        >
+          <SyncIcon />
+        </button>
+        <p>{currentState.text()}</p>
+      </div>
+    );
   }
 
   render() {
@@ -132,8 +174,8 @@ class Footer extends React.Component {
 
     const currentState = this.getFooterState(this.props.state);
     const footerClass = [
-      currentState.yellowBackground ? 'warning' : '',
-      currentState.animateSyncIcon ? 'animateSyncIcon' : '',
+      currentState && currentState.yellowBackground ? 'warning' : '',
+      currentState && currentState.animateSyncIcon ? 'animateSyncIcon' : '',
     ]
       .filter(Boolean)
       .join(' ');
@@ -147,35 +189,7 @@ class Footer extends React.Component {
         className={footerClass}
       >
         <div id="footerButtons">
-          {currentState.yellowBackground ? (
-            <button
-              className="fullWidth"
-              title={currentState.text ? currentState.text() : ''}
-              onClick={(e) => this.triggerSync(e)}
-            >
-              <WarningIcon />
-              <span>{currentState.text()}</span>
-            </button>
-          ) : (
-            <div
-              className={
-                currentState.isClickable
-                  ? 'isClickable btnWrapper'
-                  : 'btnWrapper'
-              }
-            >
-              <button
-                id="trigger-sync"
-                disabled={!currentState.isClickable}
-                onClick={(e) => this.triggerSync(e)}
-                title={browser.i18n.getMessage('syncNotes') || 'Sync notes'}
-                className="iconBtn"
-              >
-                <SyncIcon />
-              </button>
-              <p>{currentState.text()}</p>
-            </div>
-          )}
+          {currentState ? this.renderStatus(currentState) : null}
 
           <div
             className="photon-menu close top left"

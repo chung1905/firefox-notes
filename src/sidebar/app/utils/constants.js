@@ -17,6 +17,9 @@ export const CREATE_NOTE = 'create-note';
 export const UPDATE_NOTE = 'update-note';
 export const DELETE_NOTE = 'delete-note';
 
+// Broadcast when the settings page switches syncing on or off.
+export const SYNC_SETTING_CHANGED = 'sync-setting-changed';
+
 export const FOCUS_NOTE = 'focus-note';
 export const ERROR = 'error';
 export const REQUEST_WELCOME_PAGE = 'request-welcome-page';

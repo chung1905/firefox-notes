@@ -10,6 +10,7 @@ import {
   FOCUS_NOTE,
   ERROR,
   REQUEST_WELCOME_PAGE,
+  SYNC_SETTING_CHANGED,
 } from './utils/constants';
 
 import { getNoteSummary } from './utils/utils';
@@ -239,11 +240,25 @@ function notes(notes = [], action) {
   }
 }
 
+// Whether notes are being written to storage.sync. app.jsx seeds it from
+// storage.local on open and onMessage.js keeps it current, so the default
+// only stands for the moment before the first read -- and it matches
+// storage-sync.js, where an absent setting means off.
+function syncEnabled(syncEnabled = false, action) {
+  switch (action.type) {
+    case SYNC_SETTING_CHANGED:
+      return action.syncEnabled === true;
+    default:
+      return syncEnabled;
+  }
+}
+
 const noteApp = combineReducers({
   sync,
   isLoaded,
   notes,
   noteSync,
+  syncEnabled,
 });
 
 export default noteApp;

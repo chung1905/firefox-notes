@@ -92,6 +92,9 @@ Footer Styles
   }
 
   .photon-menu {
+    // With syncing off the menu is the only thing left in the row, and
+    // space-between would slide it over to the left edge.
+    margin-left: auto;
     padding-right: 4px;
   }
   .photon-menu.left .wrapper {
