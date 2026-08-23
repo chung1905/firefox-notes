@@ -68,7 +68,7 @@ signing script still passes `--source-dir src`, which predates Vite and would
 ship unbundled sources. Nothing validates the modern stack on push — run
 `npm run lint` and `npm run test:ui` locally, and don't modernize these as a
 side effect. Releases bump the version in both `package.json` and
-`src/manifest.json`; see `RELEASE.md`.
+`src/manifest.json`, which are the only two places it lives.
 
 ## Architecture
 

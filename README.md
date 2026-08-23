@@ -78,7 +78,8 @@ explicitly send it through the context menu.
 
 ## Release
 
-See [RELEASE.md](RELEASE.md).
+Bump the version in `package.json` and `src/manifest.json` — it lives in both —
+then `npm run build` and upload `web-ext-artifacts/sidebar_notes-<version>.zip`.
 
 ## Localization
 
