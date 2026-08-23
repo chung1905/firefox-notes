@@ -5,7 +5,6 @@
 * Upgrade the version number (i.e: 1.7.0):
   * Update `package.json` version number
   * Update `src/manifest.json` version number
-  * Update `CHANGELOG.md`
 
 ```
 export version=1.7.0
@@ -40,7 +39,6 @@ git push origin production
 * Upgrade to next version in dev (i.e 1.8.0dev):
   * Update `package.json` next version number
   * Update `src/manifest.json` next version number
-  * Prepare `CHANGELOG.md` for the next release
 
 ```
 git commit -am "Back to development"
