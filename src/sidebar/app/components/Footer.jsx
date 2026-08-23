@@ -188,35 +188,33 @@ class Footer extends React.Component {
         ref={(footerbuttons) => (this.footerbuttons = footerbuttons)}
         className={footerClass}
       >
-        <div id="footerButtons">
-          {currentState ? this.renderStatus(currentState) : null}
+        {currentState ? this.renderStatus(currentState) : null}
 
-          <div
-            className="photon-menu close top left"
-            ref={(menu) => (this.menu = menu)}
+        <div
+          className="photon-menu close top left"
+          ref={(menu) => (this.menu = menu)}
+        >
+          <button
+            ref={(contextMenuBtn) => (this.contextMenuBtn = contextMenuBtn)}
+            className="iconBtn"
+            onClick={(e) => this.toggleMenu(e)}
           >
-            <button
-              ref={(contextMenuBtn) => (this.contextMenuBtn = contextMenuBtn)}
-              className="iconBtn"
-              onClick={(e) => this.toggleMenu(e)}
-            >
-              <MoreIcon />
-            </button>
-            <div className="wrapper">
-              <ul role="menu">
-                <li>
-                  <button
-                    role="menuitem"
-                    onKeyDown={this.exportAll}
-                    ref={(btn) => (btn ? this.buttons.push(btn) : null)}
-                    title="Export All Notes"
-                    onClick={this.exportAll}
-                  >
-                    Export All Notes
-                  </button>
-                </li>
-              </ul>
-            </div>
+            <MoreIcon />
+          </button>
+          <div className="wrapper">
+            <ul role="menu">
+              <li>
+                <button
+                  role="menuitem"
+                  onKeyDown={this.exportAll}
+                  ref={(btn) => (btn ? this.buttons.push(btn) : null)}
+                  title="Export All Notes"
+                  onClick={this.exportAll}
+                >
+                  Export All Notes
+                </button>
+              </li>
+            </ul>
           </div>
         </div>
       </footer>

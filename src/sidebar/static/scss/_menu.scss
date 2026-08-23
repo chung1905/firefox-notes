@@ -1,3 +1,11 @@
+// The popup is a raised surface rather than part of the bar it hangs off, so
+// its colours are tokens the dark theme redefines -- the panel used to stay
+// white in both themes, with the item text forced back to black to survive it.
+html {
+  --menu-bg-color: #fff;
+  --menu-border-color: rgba(12, 12, 13, 0.2);
+}
+
 .photon-menu {
   position: relative;
   display: flex;
@@ -72,10 +80,10 @@
     position: absolute;
     z-index: 9999;
     ul {
-      background: white;
+      background: var(--menu-bg-color);
       padding: 6px 0;
       margin: inherit;
-      border: solid 1px rgba(12, 12, 13, 0.2);
+      border: solid 1px var(--menu-border-color);
       box-shadow: 0px 4px 16px rgba(12, 12, 13, 0.1);
       border-radius: 2px;
       min-width: 150px;
@@ -92,7 +100,7 @@
         position: absolute;
         right: 8px;
         border-style: solid;
-        border-color: white transparent;
+        border-color: var(--menu-bg-color) transparent;
         display: block;
         width: 0;
         z-index: 1;
@@ -103,7 +111,7 @@
         position: absolute;
         right: 8px;
         border-style: solid;
-        border-color: rgba(12, 12, 13, 0.2) transparent;
+        border-color: var(--menu-border-color) transparent;
         display: block;
         width: 0;
         z-index: 0;
@@ -112,7 +120,7 @@
       hr {
         margin: 6px 0;
         border: none;
-        border-bottom: solid 1px rgba(12, 12, 13, 0.2);
+        border-bottom: solid 1px var(--menu-border-color);
       }
       li {
         list-style: none;

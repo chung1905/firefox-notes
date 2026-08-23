@@ -2,9 +2,14 @@
 Footer Styles
  */
 
-#footerButtons {
+// The <footer> is the bar itself. It used to wrap a #footerButtons div that
+// carried this surface, which meant the dark theme's rules -- all aimed at the
+// footer element -- painted behind an opaque light-grey child, and .warning
+// (set on the footer) never reached the background it was meant to turn yellow.
+#footer-buttons {
   width: 100%;
   height: 40px;
+  flex: 0 0 auto;
   font-size: 13px;
   color: #969696;
   align-items: stretch;

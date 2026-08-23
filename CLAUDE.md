@@ -175,6 +175,13 @@ silently is the thing this UI exists to prevent. Don't reintroduce a "saved"
 tick there; the checkmark and the spinner are reporting a round trip that
 isn't happening.
 
+The footer is a single `<footer id="footer-buttons">` and paints its own
+surface. It used to wrap a `<div id="footerButtons">` that carried the
+background, which left the dark theme's rules — all aimed at the footer
+element — painting behind an opaque light-grey child, and kept `.warning` (set
+on the footer) from ever reaching the background it turns yellow. Don't
+reintroduce the wrapper; style the footer itself.
+
 ### Routing and views
 
 `router.jsx` is a hand-rolled ~60-line replacement for react-router. Two views:
@@ -265,3 +272,9 @@ strings come from `browser.i18n.getMessage('key')`.
   copied verbatim, not bundled) writes `storage.local.theme` and sends
   `theme-changed`, `background.js` rebroadcasts it, and `utils/theme.js` re-reads
   storage. Moving where the theme lives means touching all three.
+
+  Colours belong to the theme, not to a component: light values live as tokens
+  on `html` in the partial that owns them (`_menu.scss`, `_sync-status.scss`)
+  and `dark.scss` redefines them. `[data-theme='dark']` also sets
+  `color-scheme`, which is what themes scrollbars and native widgets — a dark
+  palette without it leaves light scrollbars over dark surfaces.

@@ -5,6 +5,10 @@
 // recalculation rather than a stylesheet fetch and parse.
 // app.js imports this after styles.scss to keep the original cascade order.
 [data-theme='dark'] {
+  // Scrollbars and native widgets follow this; without it they stay light on
+  // top of the dark surfaces below.
+  color-scheme: dark;
+
   --main-bg-color: hsla(221deg, 14%, 25%, 1);
   --main-offset-bg-color: hsla(221deg, 14%, 24%, 1);
   --main-bg-hover-color: hsla(221deg, 14%, 22%, 1);
@@ -14,6 +18,11 @@
   --primary-font-color: hsla(221deg, 14%, 90%, 1);
   --secondary-font-color: hsla(221deg, 14%, 60%, 1);
   --border-color: hsla(221deg, 14%, 45%, 1);
+
+  // A dropdown reads as raised, so it sits above the surface it hangs off
+  // rather than matching it.
+  --menu-bg-color: hsla(221deg, 14%, 31%, 1);
+  --menu-border-color: hsla(221deg, 14%, 45%, 1);
 
   --note-sync-idle-color: var(--secondary-font-color);
   --note-sync-progress-color: #4e92dd;
@@ -53,7 +62,6 @@
     fill: #e6e6e6 !important;
   }
   footer.warning button.fullWidth {
-    background-color: rgb(255, 236, 173);
     color: black !important;
   }
   footer.warning button svg path {
@@ -69,7 +77,14 @@
   }
 
   .photon-menu ul button {
-    color: black !important;
+    color: var(--primary-font-color);
+  }
+
+  // This has to be restated: the rule above is specific enough to beat
+  // styles.scss's `button:disabled`, which would leave a disabled item looking
+  // exactly like an enabled one.
+  .photon-menu ul button:disabled {
+    color: var(--secondary-font-color);
   }
 
   .photon-menu ul button:hover,
@@ -173,6 +188,10 @@
     color: #0080ff;
   }
 
+  #notes .ck.ck-dropdown__panel {
+    border-color: var(--border-color);
+  }
+
   #notes .ck-toolbar .ck-list__item:hover {
     background-color: #323744;
   }
@@ -214,8 +233,12 @@
     border-color: var(--border-color);
   }
 
-  footer {
-    background: none !important;
+  // #footer-buttons sets colour and border with an id selector. The rule above
+  // takes the background off it because that declaration is !important; these
+  // two are not, so they have to match the specificity instead.
+  footer#footer-buttons {
+    color: var(--primary-font-color);
+    border-top-color: var(--border-color);
   }
 
   header button.iconBtn svg path,

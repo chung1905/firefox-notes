@@ -16,6 +16,10 @@
 }
 
 html {
+  // The light theme really is light, so say so rather than leaving scrollbars
+  // and form controls to follow the browser's setting. [data-theme='dark']
+  // flips it in dark.scss.
+  color-scheme: light;
   height: 100%;
   overflow: hidden;
   margin: 0;
