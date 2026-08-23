@@ -1,8 +1,28 @@
+/* The sidebar scopes its dark stylesheet to [data-theme='dark']; settings.js
+   sets the same attribute here, so choosing "Dark" no longer leaves the page
+   you chose it on light. The palette matches sidebar/static/scss/dark.scss. */
+:root {
+  color-scheme: light;
+
+  --settings-bg-color: #fff;
+  --settings-font-color: #333;
+  --settings-hint-color: #666;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --settings-bg-color: hsla(221deg, 14%, 25%, 1);
+  --settings-font-color: hsla(221deg, 14%, 90%, 1);
+  --settings-hint-color: hsla(221deg, 14%, 60%, 1);
+}
+
 body {
   font-family:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
     Arial, sans-serif;
-  color: #333;
+  background-color: var(--settings-bg-color);
+  color: var(--settings-font-color);
 }
 
 label {
@@ -27,7 +47,7 @@ label#syncTitle {
 }
 
 p#syncHint {
-  color: #666;
+  color: var(--settings-hint-color);
   font-size: 0.9em;
   margin: 0.5em 0 0 33%;
   max-width: 40em;

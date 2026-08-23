@@ -1,3 +1,19 @@
+// The sidebar's utils/theme.js scopes the dark stylesheet to this attribute.
+// This page is a separate document and a classic script, so it cannot import
+// that module -- it sets the same attribute itself, against the tokens in
+// settings.css. localStorage is shared across the extension's pages and is
+// read synchronously, so both paint the right theme before storage.local (the
+// source of truth) resolves.
+const THEME_CACHE_KEY = 'theme';
+
+function applyTheme(theme) {
+  const value = theme === 'dark' ? 'dark' : 'default';
+  document.documentElement.dataset.theme = value;
+  localStorage.setItem(THEME_CACHE_KEY, value);
+}
+
+applyTheme(localStorage.getItem(THEME_CACHE_KEY));
+
 // getting elements that have text displayed and setting localized text
 const themeLegend = document.getElementById('themeTitle');
 const defaultThemeLabel = document.getElementById('default_label');
@@ -30,6 +46,8 @@ const themeRadioBtn = document.getElementsByName('theme');
 function loadSavedData(data) {
   const theme = data.theme;
 
+  applyTheme(theme);
+
   if (theme === 'default') themeRadioBtn[0].checked = true;
   else if (theme === 'dark') themeRadioBtn[1].checked = true;
 
@@ -59,6 +77,7 @@ for (let i = 0; i < themeRadioBtn.length; i++) {
   themeRadioBtn[i].onclick = function () {
     const theme = getTheme();
 
+    applyTheme(theme.theme);
     browser.storage.local.set(theme);
 
     // notify background.js that theme settings have changed

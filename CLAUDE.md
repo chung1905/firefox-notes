@@ -273,6 +273,17 @@ strings come from `browser.i18n.getMessage('key')`.
   `theme-changed`, `background.js` rebroadcasts it, and `utils/theme.js` re-reads
   storage. Moving where the theme lives means touching all three.
 
+  `storage.local` is the source of truth, but it is promise-based, so the
+  attribute could only ever land *after* the first paint — bundling `dark.scss`
+  removed the stylesheet fetch, not the flash. Both `utils/theme.js` and
+  `settings/settings.js` therefore mirror the applied value into
+  `localStorage.theme`, which is synchronous and shared across the extension's
+  pages, and apply that before anything else runs. It is a cache, not a fourth
+  home for the setting: `storage.local` still corrects it a tick later, and
+  both writers must keep updating it or a sidebar opened after a theme change
+  paints the old theme first. The settings page reads the same attribute
+  against tokens in `settings.css`, so it themes itself.
+
   Colours belong to the theme, not to a component: light values live as tokens
   on `html` in the partial that owns them (`_menu.scss`, `_sync-status.scss`)
   and `dark.scss` redefines them. `[data-theme='dark']` also sets
