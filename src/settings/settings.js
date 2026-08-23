@@ -4,7 +4,12 @@ const defaultThemeLabel = document.getElementById('default_label');
 const darkThemeLabel = document.getElementById('dark_label');
 
 themeLegend.innerHTML = browser.i18n.getMessage('themeLegend');
-defaultThemeLabel.innerHTML = browser.i18n.getMessage('defaultThemeTitle');
+// Pontoon only has `defaultThemeTitle` ("Default"), but nothing here follows
+// the OS -- the choice is between the light stylesheet and the dark one -- so
+// the label says which one it is. English until a light string lands upstream.
+// The stored value stays `default`, which is what theme.js and every existing
+// profile already hold.
+defaultThemeLabel.textContent = 'Light';
 darkThemeLabel.innerHTML = browser.i18n.getMessage('darkThemeTitle');
 
 const syncTitle = document.getElementById('syncTitle');
