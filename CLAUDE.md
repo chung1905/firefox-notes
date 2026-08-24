@@ -36,6 +36,10 @@ what `circle.yml` and older docs say.
 
 Scripts live in `package.json`. Run `npm run format` before committing.
 
+The `Makefile` only wraps two of them — `make build` and `make package` — plus
+an `npm ci` guarded on the lock file. Add a target there and the script itself
+still belongs in `package.json`; nothing about the build lives in the Makefile.
+
 ### Tests
 
 The only suite is Selenium + Mocha under `test/integration/` (native ESM,
@@ -69,6 +73,16 @@ ship unbundled sources. Nothing validates the modern stack on push — run
 `npm run lint` and `npm run test:ui` locally, and don't modernize these as a
 side effect. Releases bump the version in both `package.json` and
 `src/manifest.json`, which are the only two places it lives.
+
+AMO rejects a submission whose manifest omits
+`browser_specific_settings.gecko.data_collection_permissions`, so it is
+required even though Firefox only understands it from 140 (142 on Android).
+`required: ["none"]` is the honest answer: nothing here transmits to the
+developer or a third party — there is no telemetry and no network call, and
+`storage.sync` hands notes to the user's own Firefox Account, not to us. The
+two `KEY_FIREFOX*_UNSUPPORTED_BY_MIN_VERSION` warnings `web-ext lint` raises
+about the key are expected, since `strict_min_version` is 115; older Firefox
+ignores it. Don't silence them by raising the floor.
 
 ## Architecture
 
@@ -264,6 +278,21 @@ strings come from `browser.i18n.getMessage('key')`.
   of them critical. It trades one dev-only high for far worse. This has already
   happened once, silently, in the working tree. The findings that remain are
   dev-only and unfixable upstream; leave them.
+- **Don't assign to `innerHTML`.** addons-linter flags every dynamic
+  assignment as `UNSAFE_VAR_ASSIGNMENT`, and AMO lists those as issues that
+  "can lead to rejections" -- in practice a manual review on every submission.
+  Localized strings go in with `textContent` (`settings/settings.js`), and the
+  two places that parse a note's saved HTML to read text out of it --
+  `getNoteSummary` and `exportHTML` -- go through `utils/utils.js`'s
+  `parseNoteHtml`, which uses `DOMParser`. It parses inertly and isn't flagged.
+  The two differ only on markup belonging to `<head>`: a `<style>` or `<title>`
+  in the content lands in `document.head`, where the summary and the export
+  filename no longer see it, instead of being read as the note's first line.
+  CKEditor emits neither, and reading CSS out as a note title was a bug
+  anyway. Five warnings survive in `sidebar/app.js` and
+  `sidebar/editorBundle.js`; those are Preact's `dangerouslySetInnerHTML`
+  handler and CKEditor's own, both third-party and neither removable.
+
 - **CKEditor is lazily loaded.** Reach it only through `utils/loadEditor.js`,
   which dynamically imports `utils/editorBundle.js`. That module is the one
   place allowed to `import { ... } from 'ckeditor5'`, and only by *named*

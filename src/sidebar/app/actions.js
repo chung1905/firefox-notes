@@ -15,7 +15,11 @@ import {
 
 import INITIAL_CONTENT from './data/initialContent';
 import { reconcileNotes } from './utils/reconcileNotes';
-import { getFirstNonEmptyElement, formatFilename } from './utils/utils';
+import {
+  getFirstNonEmptyElement,
+  formatFilename,
+  parseNoteHtml,
+} from './utils/utils';
 import { saveFile } from './utils/download';
 
 /*
@@ -164,9 +168,8 @@ export function deleteNote(id, origin) {
 export function exportHTML(content) {
   // get Notes content
   const notesContent = content || '';
-  // assign contents to container element for later parsing
-  const parentElement = document.createElement('div');
-  parentElement.innerHTML = notesContent;
+  // only read for the filename below; the exported file gets notesContent itself
+  const parentElement = parseNoteHtml(notesContent);
 
   let exportFileName = 'blank.html';
   // get the first child element with text

@@ -45,20 +45,37 @@ function getFirstNonEmptyElement(parentElement) {
 }
 
 /**
+ * Parses a note's HTML into an inert <body>.
+ *
+ * DOMParser builds a document with no browsing context, so nothing in the
+ * markup runs or fetches -- and, unlike assigning to innerHTML, it doesn't
+ * trip addons-linter's UNSAFE_VAR_ASSIGNMENT, which costs the submission a
+ * manual review on AMO. Parsing is otherwise identical, auto-closed tags
+ * included.
+ *
+ * @param {string} html
+ * @returns {HTMLElement}
+ */
+function parseNoteHtml(html) {
+  return new DOMParser().parseFromString(html, 'text/html').body;
+}
+
+/**
  * Parses a note's HTML once and returns both list-view summary lines.
  *
  * These used to be two exported functions, and stripHtmlWithoutFirstLine
  * called getFirstLineFromContent internally, so rendering a note cost three
- * innerHTML parses of its full content -- on every keystroke pause, inside a
- * reducer.
+ * full parses of its content -- on every keystroke pause, inside a reducer.
  *
  * @param {string} content
  * @returns {{firstLine: ?string, secondLine: ?string}}
  */
 function getNoteSummary(content) {
-  // assign contents to container element for later parsing
-  const parentElement = document.createElement('div');
-  parentElement.innerHTML = content.replace(/<\/p>|<\/li>/gi, '&nbsp;');
+  // the entity closes the gap the dropped tag left, so textContent doesn't run
+  // the last word of one block into the first of the next
+  const parentElement = parseNoteHtml(
+    content.replace(/<\/p>|<\/li>/gi, '&nbsp;'),
+  );
 
   const element = getFirstNonEmptyElement(parentElement);
   const firstLine = element
@@ -102,6 +119,7 @@ function formatFilename(filename) {
 export {
   formatFooterTime,
   getFirstNonEmptyElement,
+  parseNoteHtml,
   formatFilename,
   getNoteSummary,
   formatLastModified,
