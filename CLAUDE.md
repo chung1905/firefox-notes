@@ -322,8 +322,12 @@ strings come from `browser.i18n.getMessage('key')`.
   every plugin (~880 KB the note list would then parse on every sidebar open).
 - **`src/_locales` is generated and gitignored.** `scripts/build-locales.js`
   runs `pontoon-to-webext` over `locales/*/notes.properties`. Never edit
-  `src/_locales`; leave `locales/` alone too — it is upstream's Pontoon
-  export, and this fork is not a Pontoon project, so nothing adds to it.
+  `src/_locales`. `locales/` is upstream's last Pontoon export, and this fork
+  is not a Pontoon project, so nothing syncs into it any more: it is ordinary
+  source. Strings nothing reads were deleted from it in 4.4.1 (45 of 85 keys,
+  nearly half the packaged `_locales`) — delete a key there when its last use
+  goes, and fetch one back from git history rather than writing a
+  translation by hand.
   `vite.config.mjs` throws if `src/_locales` is missing — run
   `npm run postinstall`. New UI copy therefore can't ship translated: reuse an
   existing key where one fits, and otherwise write the English inline, as the

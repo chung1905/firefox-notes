@@ -167,12 +167,6 @@ class Editor extends React.Component {
   }
 }
 
-// We can reuse notification in editorWrapper using the following :
-// <div id="sync-note">
-//   <button onClick={this.closeNotification}><CloseIcon /></button>
-//   <p>{ browser.i18n.getMessage('maximumPadSizeExceeded') }</p>
-// </div>
-
 function mapStateToProps(state) {
   return {
     state,
