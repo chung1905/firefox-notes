@@ -20,6 +20,8 @@ export const SYNC_SETTING_CHANGED = 'sync-setting-changed';
 export const FOCUS_NOTE = 'focus-note';
 export const ERROR = 'error';
 export const REQUEST_WELCOME_PAGE = 'request-welcome-page';
+// Sidebar-only: the view that inserted the queued send-to-notes text.
+export const SELECTIONS_TAKEN = 'selections-taken';
 
 export const FROM_IN_NOTE = 'in-note';
 export const FROM_LIST_VIEW = 'list-view';

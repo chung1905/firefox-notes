@@ -11,6 +11,8 @@ import {
   ERROR,
   REQUEST_WELCOME_PAGE,
   SYNC_SETTING_CHANGED,
+  SEND_TO_NOTES,
+  SELECTIONS_TAKEN,
 } from './utils/constants';
 
 import INITIAL_CONTENT from './data/initialContent';
@@ -201,6 +203,21 @@ export function exportHTML(content) {
   return { type: EXPORT_HTML, content };
 }
 
+// Text sent from a page is queued in the store rather than handed straight to
+// a view: the open view may not be listening yet -- the editor attaches only
+// once CKEditor has loaded -- and onMessage.js always is.
+export function selectionReceived(text) {
+  return { type: SEND_TO_NOTES, text };
+}
+
+export function takeSelections() {
+  return (dispatch, getState) => {
+    const texts = getState().pendingSelections;
+    if (texts.length > 0) dispatch({ type: SELECTIONS_TAKEN });
+    return texts;
+  };
+}
+
 export function setFocusedNote(id) {
   return { type: FOCUS_NOTE, id };
 }
@@ -209,8 +226,10 @@ export function requestWelcomeNote() {
   return { type: REQUEST_WELCOME_PAGE };
 }
 
-export function error(message, id) {
-  return { type: ERROR, message, id };
+// `fromLoad` marks a failed load, the one error a later successful load
+// clears; a refused save stays until that note saves.
+export function error(message, id, fromLoad = false) {
+  return { type: ERROR, message, id, fromLoad };
 }
 
 // Mirrors storage.local.syncEnabled into the store. Nothing about saving

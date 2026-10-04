@@ -23,7 +23,7 @@ class Header extends React.Component {
     this.toggleMenu = () => {
       if (this.menu && this.menu.classList.contains('close')) {
         this.menu.classList.replace('close', 'open');
-        setTimeout(() => {
+        this.openMenuTimer = setTimeout(() => {
           window.addEventListener('click', this.onCloseListener, {
             once: true,
           });
@@ -75,6 +75,13 @@ class Header extends React.Component {
       props.dispatch(deleteNote(this.props.note.id, 'in-note'));
       this.props.history.push('/');
     };
+  }
+
+  // The menu's listeners live on window, which outlives this component.
+  componentWillUnmount() {
+    clearTimeout(this.openMenuTimer);
+    window.removeEventListener('click', this.onCloseListener);
+    window.removeEventListener('keydown', this.handleKeyPress);
   }
 
   render() {

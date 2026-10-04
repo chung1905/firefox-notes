@@ -2,16 +2,12 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 import INITIAL_CONTENT from '../data/initialContent';
-import {
-  SEND_TO_NOTES,
-  FROM_SEND_TO_NOTE,
-  FROM_LIST_VIEW,
-} from '../utils/constants';
+import { FROM_SEND_TO_NOTE, FROM_LIST_VIEW } from '../utils/constants';
 
 import NewIcon from './icons/NewIcon';
 import { NoteSyncBadge } from './NoteSyncStatus';
-import { setFocusedNote, createNote } from '../actions';
-import { formatLastModified } from '../utils/utils';
+import { setFocusedNote, createNote, takeSelections } from '../actions';
+import { formatLastModified, textToNoteHtml } from '../utils/utils';
 
 class ListPanel extends React.Component {
   constructor(props) {
@@ -23,16 +19,12 @@ class ListPanel extends React.Component {
       props.history.push('/note');
     };
 
-    this.sendToNoteListener = (eventData) => {
-      if (eventData.action === SEND_TO_NOTES) {
-        browser.windows.getCurrent({ populate: true }).then((windowInfo) => {
-          if (windowInfo.id === eventData.windowId) {
-            this.props.dispatch(
-              createNote(`<p>${eventData.text}</p>`, FROM_SEND_TO_NOTE),
-            );
-          }
-        });
-      }
+    this.insertSelections = () => {
+      this.props.dispatch(takeSelections()).forEach((text) => {
+        this.props.dispatch(
+          createNote(textToNoteHtml(text), FROM_SEND_TO_NOTE),
+        );
+      });
     };
 
     this.checkInitialContent = (state) => {
@@ -80,7 +72,7 @@ class ListPanel extends React.Component {
   }
 
   componentDidMount() {
-    chrome.runtime.onMessage.addListener(this.sendToNoteListener);
+    this.insertSelections();
 
     // If user is not logged, and has no notes, we create initial content for him
     // and redirect to it.
@@ -97,19 +89,15 @@ class ListPanel extends React.Component {
         e.preventDefault();
       });
     });
-
-    // Send message to background.js stating editor has been initialized
-    // and is ready to receive content
-    chrome.runtime.sendMessage({ action: 'editor-ready' });
   }
 
   componentWillUnmount() {
     window.removeEventListener('keydown', this.handleKeyPress);
-    chrome.runtime.onMessage.removeListener(this.sendToNoteListener);
     clearTimeout(this.timer);
   }
 
   componentDidUpdate() {
+    this.insertSelections();
     // If user is not logged, and has no notes, we create initial content for him
     // and redirect to it.
     this.checkInitialContent(this.props.state);

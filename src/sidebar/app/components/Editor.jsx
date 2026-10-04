@@ -2,10 +2,17 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 import loadEditor from '../utils/loadEditor';
-import { SEND_TO_NOTES, FROM_BLANK_NOTE } from '../utils/constants';
+import { FROM_BLANK_NOTE } from '../utils/constants';
 import { customizeEditor } from '../utils/editor';
+import { textToNoteHtml } from '../utils/utils';
 
-import { updateNote, createNote, deleteNote, setFocusedNote } from '../actions';
+import {
+  updateNote,
+  createNote,
+  deleteNote,
+  setFocusedNote,
+  takeSelections,
+} from '../actions';
 
 const styles = {
   container: {
@@ -23,17 +30,42 @@ class Editor extends React.Component {
     this.ignoreChange = false;
     this.delayUpdateNote = null;
     this.isUnmounted = false;
+    this.pageListeners = new AbortController();
 
-    this.sendToNoteListener = (eventData) => {
-      if (eventData.action === SEND_TO_NOTES) {
-        browser.windows.getCurrent({ populate: true }).then((windowInfo) => {
-          if (windowInfo.id === eventData.windowId) {
-            let content = this.editor.getData();
-            if (content === '<p>&nbsp;</p>') content = '';
-            this.editor.setData(content + `<p>${eventData.text}</p>`);
-          }
-        });
+    this.saveContent = () => {
+      const content = this.editor.getData();
+
+      if (content !== '' && content !== '<p>&nbsp;</p>') {
+        if (!this.props.note.id) {
+          this.props
+            .dispatch(createNote(content, this.props.origin))
+            .then((id) => {
+              this.props.dispatch(setFocusedNote(id));
+            });
+        } else {
+          this.props.dispatch(updateNote(this.props.note.id, content));
+        }
+      } else if (this.props.note.id) {
+        this.props.dispatch(deleteNote(this.props.note.id, FROM_BLANK_NOTE));
       }
+    };
+
+    // Text queued while CKEditor loads waits for it. The save is made here,
+    // not left to the change handler: that one only saves a focused editor,
+    // and after a context-menu click the focus is on the page.
+    this.insertSelections = () => {
+      if (!this.editor) return;
+
+      const texts = this.props.dispatch(takeSelections());
+      if (texts.length === 0) return;
+
+      let content = this.editor.getData();
+      if (content === '<p>&nbsp;</p>') content = '';
+      this.editor.setData(content + texts.map(textToNoteHtml).join(''));
+
+      clearTimeout(this.delayUpdateNote);
+      this.delayUpdateNote = null;
+      this.saveContent();
     };
   }
 
@@ -49,9 +81,7 @@ class Editor extends React.Component {
         }
         this.editor = editor;
 
-        chrome.runtime.onMessage.addListener(this.sendToNoteListener);
-
-        customizeEditor(editor);
+        customizeEditor(editor, this.pageListeners.signal);
 
         // Focus the text editor
         this.editor.editing.view.focus();
@@ -70,32 +100,16 @@ class Editor extends React.Component {
               name === 'insert' ||
               (name.type && name.type === 'transparent')
             ) {
-              const content = editor.getData();
-
               if (!this.ignoreChange) {
-                if (content !== '' && content !== '<p>&nbsp;</p>') {
-                  if (!this.props.note.id) {
-                    this.props
-                      .dispatch(createNote(content, this.props.origin))
-                      .then((id) => {
-                        this.props.dispatch(setFocusedNote(id));
-                      });
-                  } else {
-                    this.props.dispatch(
-                      updateNote(this.props.note.id, content),
-                    );
-                  }
-                } else if (this.props.note.id) {
-                  this.props.dispatch(
-                    deleteNote(this.props.note.id, FROM_BLANK_NOTE),
-                  );
-                }
+                this.saveContent();
               }
               this.ignoreChange = false;
             }
             this.delayUpdateNote = null;
           }, 50);
         });
+
+        this.insertSelections();
       })
       .catch((error) => {
         console.error(error); // eslint-disable-line no-console
@@ -104,6 +118,8 @@ class Editor extends React.Component {
 
   // This is triggered when redux update state.
   componentDidUpdate(prevProps) {
+    this.insertSelections();
+
     if (
       this.editor &&
       prevProps.note &&
@@ -123,7 +139,7 @@ class Editor extends React.Component {
 
   componentWillUnmount() {
     this.isUnmounted = true;
-    chrome.runtime.onMessage.removeListener(this.sendToNoteListener);
+    this.pageListeners.abort();
 
     if (this.editor) {
       this.editor.destroy();
@@ -139,8 +155,10 @@ class Editor extends React.Component {
             ref={(node) => {
               this.node = node;
             }}
+            // Preact assigns __html to innerHTML as-is, so a new note's
+            // undefined content would render as the text "undefined".
             dangerouslySetInnerHTML={{
-              __html: this.props.note ? this.props.note.content : '',
+              __html: this.props.note?.content ?? '',
             }}
           ></div>
         </div>

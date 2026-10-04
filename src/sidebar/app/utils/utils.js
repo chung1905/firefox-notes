@@ -60,6 +60,27 @@ function parseNoteHtml(html) {
   return new DOMParser().parseFromString(html, 'text/html').body;
 }
 
+const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
+
+/**
+ * Turns plain text -- a page selection sent through the context menu -- into
+ * note HTML, one paragraph per non-blank line.
+ *
+ * The text is escaped because it is text: a selection reading `a < b` or
+ * `<img src=…>` must arrive as those characters, not be parsed as markup that
+ * mangles it or makes the sidebar fetch from the page's choice of server.
+ *
+ * @param {string} text
+ * @returns {string}
+ */
+function textToNoteHtml(text) {
+  return text
+    .split(/\r?\n/)
+    .filter((line) => line.trim() !== '')
+    .map((line) => `<p>${line.replace(/[&<>]/g, (c) => HTML_ESCAPES[c])}</p>`)
+    .join('');
+}
+
 /**
  * Parses a note's HTML once and returns both list-view summary lines.
  *
@@ -120,6 +141,7 @@ export {
   formatFooterTime,
   getFirstNonEmptyElement,
   parseNoteHtml,
+  textToNoteHtml,
   formatFilename,
   getNoteSummary,
   formatLastModified,

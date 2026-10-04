@@ -32,10 +32,10 @@ const syncTitle = document.getElementById('syncTitle');
 const syncCheckbox = document.getElementById('sync_enabled');
 const syncEnabledLabel = document.getElementById('sync_enabled_label');
 const syncHint = document.getElementById('syncHint');
+const syncStatus = document.getElementById('syncStatus');
 
 syncTitle.textContent = browser.i18n.getMessage('syncNotes') || 'Sync';
-// These two have no Pontoon string yet. Translations are managed there rather
-// than by PR, so the copy ships in English until it lands upstream.
+// No translated string exists for these; this fork's new copy ships in English.
 syncEnabledLabel.textContent = 'Sync notes across your devices';
 syncHint.textContent =
   'Copies your notes to your other devices and keeps them in step. ' +
@@ -87,12 +87,34 @@ for (let i = 0; i < themeRadioBtn.length; i++) {
   };
 }
 
+function describeNotPushed(count) {
+  if (count === 0) return '';
+  const notes = count === 1 ? '1 note' : `${count} notes`;
+  return `${notes} could not be copied to sync and stay on this device only.`;
+}
+
 // background.js owns this write rather than the settings page: switching sync
 // on also has to push the notes storage.sync doesn't have yet, and only the
-// background script has storageSync.
+// background script has storageSync. The checkbox is re-read from storage
+// afterwards rather than trusted, so a failed switch doesn't look like it worked.
 syncCheckbox.onchange = function () {
-  browser.runtime.sendMessage({
-    action: 'set-sync-enabled',
-    enabled: syncCheckbox.checked,
-  });
+  syncCheckbox.disabled = true;
+  syncStatus.textContent = '';
+
+  browser.runtime
+    .sendMessage({
+      action: 'set-sync-enabled',
+      enabled: syncCheckbox.checked,
+    })
+    .then(({ notPushed }) => {
+      syncStatus.textContent = describeNotPushed(notPushed);
+    })
+    .catch((error) => {
+      syncStatus.textContent = `Could not change syncing: ${error.message}`;
+    })
+    .then(() => browser.storage.local.get('syncEnabled'))
+    .then((data) => {
+      syncCheckbox.checked = data.syncEnabled === true;
+      syncCheckbox.disabled = false;
+    });
 };

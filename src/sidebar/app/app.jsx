@@ -21,9 +21,13 @@ import '../static/scss/dark.scss';
 // AddListener on chrome.runtime.onMessage
 import './onMessage.js';
 
-// Create a connection with the background script to handle open and
-// close events.
-browser.runtime.connect();
+// The port is named after this window so the background knows whose sidebar
+// closed. Ready means onMessage.js is listening, which it is by now; it queues
+// send-to-notes text until a view can take it.
+browser.windows.getCurrent().then(({ id }) => {
+  browser.runtime.connect({ name: String(id) });
+  chrome.runtime.sendMessage({ action: 'editor-ready', windowId: id });
+});
 
 const styles = {
   container: {

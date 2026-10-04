@@ -158,7 +158,8 @@ async function writeNote(area, note, enforceSize) {
   try {
     await area.set({ [key]: stored });
   } catch (error) {
-    if (error.message && error.message.includes('QUOTA_BYTES')) {
+    // Firefox's wording; Chrome's `QUOTA_BYTES` never reaches this extension.
+    if (error.message && error.message.includes('QuotaExceededError')) {
       throw new StorageLimitError(
         browser.i18n.getMessage('insufficientStorage'),
       );

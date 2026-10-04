@@ -46,6 +46,16 @@ label#syncTitle {
   width: 33%;
 }
 
+p#syncStatus {
+  font-size: 0.9em;
+  margin: 0.5em 0 0 33%;
+  max-width: 40em;
+}
+
+p#syncStatus:empty {
+  display: none;
+}
+
 p#syncHint {
   color: var(--settings-hint-color);
   font-size: 0.9em;

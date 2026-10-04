@@ -1,7 +1,9 @@
-# CLAUDE.md — Sidebar Notes
+# CLAUDE.md
 
-Guidance for AI coding agents (Claude Code and others) working in this
-repository. `AGENTS.md` is a symlink to this file — edit this one.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+It is also read by other AI coding agents: `AGENTS.md` is a symlink to this
+file — edit this one.
 
 ## Project Overview
 
@@ -35,6 +37,15 @@ what `circle.yml` and older docs say.
 ## Development
 
 Scripts live in `package.json`. Run `npm run format` before committing.
+
+```
+npm ci                 # also runs postinstall, which generates src/_locales
+npm run build          # clean → locales → vite build → web-ext zip in web-ext-artifacts/
+npm start              # web-ext run against build/ plus vite:watch (start-deved / start-nightly pick the Firefox)
+npm run lint           # stylelint + eslint, src/ only
+npm run format         # prettier --single-quote, then eslint --fix
+npm run test:ui        # Selenium + Mocha; needs a successful build first
+```
 
 The `Makefile` only wraps two of them — `make build` and `make package` — plus
 an `npm ci` guarded on the lock file. Add a target there and the script itself
@@ -109,7 +120,7 @@ reducer.
 
 `constants.js` is only half the protocol: it holds what the background
 *broadcasts* to sidebars. Requests going the other way are inline literals —
-`app.jsx` and `Footer.jsx` send `load-notes`, `ListPanel.jsx` sends
+`app.jsx` and `Footer.jsx` send `load-notes`, `app.jsx` sends
 `editor-ready`, `settings/settings.js` sends `theme-changed` and
 `set-sync-enabled` — and none of those appear in `constants.js`. Read the
 switch in `background.js` for the full list before assuming a message name is
@@ -124,7 +135,17 @@ Sync is `storage.sync` and there is nothing to sign in to, so a message name
 that implies an account is a mistake, not a compatibility shim.
 `set-sync-enabled` is the settings page asking to switch syncing on or off,
 and the broadcast that answers it is `sync-setting-changed`
-(`SYNC_SETTING_CHANGED`); neither has anything to sign in to either.
+(`SYNC_SETTING_CHANGED`); neither has anything to sign in to either. It is
+also the one request with a reply: `background.js` returns a promise of how
+many notes it could not push, rejecting if the setting itself was not saved,
+and the settings page reports that beside the checkbox.
+
+Sidebars are tracked per window. Each connects with a port named after its
+window id and sends `editor-ready` with that id once `onMessage.js` is
+listening; "Send to Notes" opens the sidebar and waits for that window's
+`editor-ready`. `onMessage.js` queues the text in the store
+(`pendingSelections`), and `ListPanel` or `Editor` takes it when it can — the
+editor only once CKEditor has loaded.
 
 Because every window's sidebar receives every message, actions carry
 `from: windowInfo.id` and `onMessage.js` compares it against
@@ -166,7 +187,8 @@ storage.local note below for what a window left holding a stale copy does.
    Two limits come with `storage.sync`, and apply only to what is written
    there: `storage-sync.js` measures each note against 6 KB itself
    (`NoteTooLargeError`), while the 100 KB total is the browser's and arrives
-   as a `QUOTA_BYTES` rejection that `saveNote` translates into
+   as a `QuotaExceededError` rejection (Firefox's wording — Chrome's
+   `QUOTA_BYTES` never arrives here) that `saveNote` translates into
    `StorageLimitError`. Nothing tracks usage ahead of that. Both are
    meaningful UI states — throw them and let `background.js` turn them into
    `error` messages rather than swallowing them. Sync failures, by contrast,
@@ -299,8 +321,9 @@ strings come from `browser.i18n.getMessage('key')`.
   exports — a namespace `import('ckeditor5')` defeats tree-shaking and drags in
   every plugin (~880 KB the note list would then parse on every sidebar open).
 - **`src/_locales` is generated and gitignored.** `scripts/build-locales.js`
-  runs `pontoon-to-webext` over `locales/*/notes.properties`. Edit neither
-  directory by hand: translations are managed in Pontoon, not by PR.
+  runs `pontoon-to-webext` over `locales/*/notes.properties`. Never edit
+  `src/_locales`; leave `locales/` alone too — it is upstream's Pontoon
+  export, and this fork is not a Pontoon project, so nothing adds to it.
   `vite.config.mjs` throws if `src/_locales` is missing — run
   `npm run postinstall`. New UI copy therefore can't ship translated: reuse an
   existing key where one fits, and otherwise write the English inline, as the

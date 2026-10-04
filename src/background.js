@@ -9,29 +9,55 @@
  * - Sidebar open/close
  */
 
-let isEditorReady = false;
-let editorConnectedDeferred;
-let isEditorConnected = new Promise((resolve) => {
-  editorConnectedDeferred = { resolve };
-});
+// Per window, because every window has its own sidebar. A sidebar is ready
+// once it says so with editor-ready; connecting alone does not mean its
+// message listener is attached yet.
+const readySidebars = new Set();
+const sidebarWaiters = new Map();
+
+function markSidebarReady(windowId) {
+  readySidebars.add(windowId);
+  (sidebarWaiters.get(windowId) || []).forEach((resolve) => resolve());
+  sidebarWaiters.delete(windowId);
+}
+
+function whenSidebarReady(windowId) {
+  if (readySidebars.has(windowId)) return Promise.resolve();
+
+  return new Promise((resolve) => {
+    sidebarWaiters.set(windowId, [
+      ...(sidebarWaiters.get(windowId) || []),
+      resolve,
+    ]);
+  });
+}
 
 /**
  * Load notes and send to sidebar
+ *
+ * A failed load is reported, never sent as an empty list: the sidebar
+ * reconciles a load against what it holds, and reads an empty one as every
+ * note having been deleted elsewhere -- then caches that.
  */
 async function loadAndSendNotes() {
+  let notes;
+
   try {
-    const notes = await storageSync.loadNotes();
-    browser.runtime.sendMessage({
-      action: 'notes-loaded',
-      notes,
-    });
+    notes = await storageSync.loadNotes();
   } catch (e) {
     console.error('Failed to load notes:', e); // eslint-disable-line no-console
     browser.runtime.sendMessage({
-      action: 'notes-loaded',
-      notes: [],
+      action: 'error',
+      message: `Could not load notes: ${e.message}`,
+      fromLoad: true,
     });
+    return;
   }
+
+  browser.runtime.sendMessage({
+    action: 'notes-loaded',
+    notes,
+  });
 }
 
 /**
@@ -44,7 +70,7 @@ browser.runtime.onMessage.addListener(function (eventData) {
       break;
 
     case 'editor-ready':
-      isEditorReady = true;
+      markSidebarReady(eventData.windowId);
       break;
 
     case 'create-note':
@@ -96,12 +122,24 @@ browser.runtime.onMessage.addListener(function (eventData) {
       break;
 
     case 'delete-note':
-      storageSync.deleteNote(eventData.id).then(() => {
-        browser.runtime.sendMessage({
-          action: 'delete-note',
-          id: eventData.id,
+      storageSync
+        .deleteNote(eventData.id)
+        .then(() => {
+          browser.runtime.sendMessage({
+            action: 'delete-note',
+            id: eventData.id,
+          });
+        })
+        .catch((error) => {
+          // The sidebar dropped the note optimistically; reloading puts back
+          // whatever storage still holds.
+          console.error('Delete error:', error); // eslint-disable-line no-console
+          browser.runtime.sendMessage({
+            action: 'error',
+            message: `Could not delete note: ${error.message}`,
+          });
+          loadAndSendNotes();
         });
-      });
       break;
 
     case 'theme-changed':
@@ -111,9 +149,12 @@ browser.runtime.onMessage.addListener(function (eventData) {
       break;
 
     case 'set-sync-enabled':
-      applySyncSetting(eventData.enabled);
-      break;
+      // The reply is how the settings page learns whether the switch worked.
+      return applySyncSetting(eventData.enabled);
   }
+
+  // Anything but a promise tells Firefox there is no reply.
+  return undefined;
 });
 
 /**
@@ -159,9 +200,11 @@ function handleSaveError(error, note, from) {
  * left in storage.sync. Notes that would not fit there are reported one by
  * one, the way a refused save is: each keeps its own flag, and none of them
  * is lost -- storage.local still holds them and loadNotes still lists them.
+ *
+ * @returns {Promise<{notPushed: number}>} Rejects if the setting was not saved
  */
 function applySyncSetting(enabled) {
-  storageSync
+  return storageSync
     .setSyncEnabled(enabled)
     .then((failures) => {
       browser.runtime.sendMessage({
@@ -170,8 +213,12 @@ function applySyncSetting(enabled) {
       });
       failures.forEach(({ note, error }) => handleSaveError(error, note));
       loadAndSendNotes();
+      return { notPushed: failures.length };
     })
-    .catch((error) => handleSaveError(error, null));
+    .catch((error) => {
+      handleSaveError(error, null);
+      throw error;
+    });
 }
 
 /**
@@ -183,20 +230,13 @@ storageSync.onSyncChanged(() => {
 });
 
 /**
- * Handle sidebar connection
+ * Track sidebar close; the port is named after the sidebar's window.
  */
-function connected(p) {
-  editorConnectedDeferred.resolve();
+browser.runtime.onConnect.addListener((port) => {
+  const windowId = Number(port.name);
 
-  p.onDisconnect.addListener(() => {
-    isEditorConnected = new Promise((resolve) => {
-      editorConnectedDeferred = { resolve };
-    });
-    isEditorReady = false;
-  });
-}
-
-browser.runtime.onConnect.addListener(connected);
+  port.onDisconnect.addListener(() => readySidebars.delete(windowId));
+});
 
 /**
  * Initialize theme
@@ -212,12 +252,11 @@ browser.storage.local.get().then((storedSettings) => {
 });
 
 /**
- * Handle toolbar button click
+ * Handle toolbar button click. open() is a no-op where the sidebar is already
+ * open, and must run synchronously in the click to count as a user action.
  */
 browser.browserAction.onClicked.addListener(() => {
-  if (!isEditorReady) {
-    browser.sidebarAction.open();
-  }
+  browser.sidebarAction.open();
 });
 
 /**
@@ -231,17 +270,15 @@ browser.contextMenus.create({
 });
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
-  if (!isEditorReady) {
-    browser.sidebarAction.open();
-  }
+  browser.sidebarAction.open();
   sendSelectionText(info.selectionText, tab.windowId);
 });
 
 /**
- * Send selected text to Notes
+ * Send selected text to Notes, once that window's sidebar is listening
  */
 async function sendSelectionText(selectionText, windowId) {
-  await isEditorConnected;
+  await whenSidebarReady(windowId);
   chrome.runtime.sendMessage({
     action: 'send-to-notes',
     windowId,

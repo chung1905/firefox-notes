@@ -7,6 +7,7 @@ import {
   DELETE_NOTE,
   ERROR,
   SYNC_SETTING_CHANGED,
+  SEND_TO_NOTES,
 } from './utils/constants';
 // Actions
 import {
@@ -19,6 +20,7 @@ import {
   updatedNote,
   error,
   syncSettingChanged,
+  selectionReceived,
 } from './actions';
 import store from './store';
 
@@ -106,11 +108,20 @@ chrome.runtime.onMessage.addListener((eventData) => {
             ),
           );
         }
-        store.dispatch(error(eventData.message, eventData.id));
+        store.dispatch(
+          error(eventData.message, eventData.id, eventData.fromLoad),
+        );
       });
       break;
     case SYNC_SETTING_CHANGED:
       store.dispatch(syncSettingChanged(eventData.syncEnabled));
+      break;
+    case SEND_TO_NOTES:
+      browser.windows.getCurrent().then((windowInfo) => {
+        if (eventData.windowId === windowInfo.id) {
+          store.dispatch(selectionReceived(eventData.text));
+        }
+      });
       break;
   }
 });

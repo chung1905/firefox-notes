@@ -42,7 +42,12 @@ class Footer extends React.Component {
       if (state.sync.error) {
         // Return a copy: mutating this.STATES.ERROR leaked the message into
         // every later render.
-        return { ...this.STATES.ERROR, text: () => state.sync.error };
+        return {
+          ...this.STATES.ERROR,
+          text: () => state.sync.error,
+          // Clicking sends load-notes, which only helps a load that failed.
+          isClickable: state.sync.loadFailed === true,
+        };
       } else if (!state.syncEnabled) {
         // Nothing is being synced, so there is no sync state to report -- and
         // a sync icon over a note that never leaves the device is a lie about
@@ -71,7 +76,7 @@ class Footer extends React.Component {
     this.toggleMenu = () => {
       if (this.menu.classList.contains('close')) {
         this.menu.classList.replace('close', 'open');
-        setTimeout(() => {
+        this.openMenuTimer = setTimeout(() => {
           window.addEventListener('click', this.onCloseListener, {
             once: true,
           });
@@ -169,8 +174,16 @@ class Footer extends React.Component {
     );
   }
 
+  // The menu's listeners live on window, which outlives this component.
+  componentWillUnmount() {
+    clearTimeout(this.openMenuTimer);
+    window.removeEventListener('click', this.onCloseListener);
+    window.removeEventListener('keydown', this.handleKeyPress);
+  }
+
   render() {
-    if (!this.props.state.isLoaded) return '';
+    // A first load that failed still needs the warning and its retry button.
+    if (!this.props.state.isLoaded && !this.props.state.sync.error) return '';
 
     const currentState = this.getFooterState(this.props.state);
     const footerClass = [

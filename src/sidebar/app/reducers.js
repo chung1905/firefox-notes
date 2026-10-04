@@ -11,6 +11,8 @@ import {
   ERROR,
   REQUEST_WELCOME_PAGE,
   SYNC_SETTING_CHANGED,
+  SEND_TO_NOTES,
+  SELECTIONS_TAKEN,
 } from './utils/constants';
 
 import { getNoteSummary } from './utils/utils';
@@ -127,11 +129,14 @@ function sync(sync = {}, action) {
         isSyncing: false,
         lastSynced: new Date(),
       });
-    case NOTES_LOADED:
+    case NOTES_LOADED: {
+      const recovered = sync.loadFailed && action.notes && !action.fromCache;
       return Object.assign({}, sync, {
         isSyncing: false,
         lastSynced: new Date(),
+        ...(recovered && { error: null, loadFailed: false }),
       });
+    }
     case FOCUS_NOTE:
       return Object.assign({}, sync, {
         focusedNoteId: action.id,
@@ -152,6 +157,7 @@ function sync(sync = {}, action) {
       return Object.assign({}, sync, {
         isSyncing: false,
         error: action.message,
+        loadFailed: action.fromLoad === true,
       });
     default:
       return sync;
@@ -253,12 +259,24 @@ function syncEnabled(syncEnabled = false, action) {
   }
 }
 
+function pendingSelections(pending = [], action) {
+  switch (action.type) {
+    case SEND_TO_NOTES:
+      return [...pending, action.text];
+    case SELECTIONS_TAKEN:
+      return [];
+    default:
+      return pending;
+  }
+}
+
 const noteApp = combineReducers({
   sync,
   isLoaded,
   notes,
   noteSync,
   syncEnabled,
+  pendingSelections,
 });
 
 export default noteApp;

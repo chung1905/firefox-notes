@@ -3,7 +3,9 @@
 // const LANG_DIR = RTL_LANGS.includes(UI_LANG) ? 'rtl' : 'ltr';
 // const TEXT_ALIGN_DIR = LANG_DIR === 'rtl' ? 'right' : 'left';
 
-function customizeEditor(editor) {
+// `signal` aborts when the editor unmounts: the footer, header and document
+// outlive it, so listeners left on them would pile up, one set per note opened.
+function customizeEditor(editor, signal) {
   const mainEditor = document.querySelector('.ck-editor__main');
 
   // Disable right clicks
@@ -11,9 +13,13 @@ function customizeEditor(editor) {
   document
     .querySelectorAll('.ck-toolbar, #footer-buttons, header')
     .forEach((sel) => {
-      sel.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-      });
+      sel.addEventListener(
+        'contextmenu',
+        (e) => {
+          e.preventDefault();
+        },
+        { signal },
+      );
     });
 
   // Fixes an issue with CKEditor and keeping multiple Firefox windows in sync
@@ -26,18 +32,30 @@ function customizeEditor(editor) {
       });
     });
 
-  document.addEventListener('dragover', () => {
-    mainEditor.classList.add('drag-n-drop-focus');
-  });
+  document.addEventListener(
+    'dragover',
+    () => {
+      mainEditor.classList.add('drag-n-drop-focus');
+    },
+    { signal },
+  );
 
-  document.addEventListener('dragleave', () => {
-    mainEditor.classList.remove('drag-n-drop-focus');
-  });
+  document.addEventListener(
+    'dragleave',
+    () => {
+      mainEditor.classList.remove('drag-n-drop-focus');
+    },
+    { signal },
+  );
 
-  document.addEventListener('drop', () => {
-    editor.fire('changesDone');
-    mainEditor.classList.remove('drag-n-drop-focus');
-  });
+  document.addEventListener(
+    'drop',
+    () => {
+      editor.fire('changesDone');
+      mainEditor.classList.remove('drag-n-drop-focus');
+    },
+    { signal },
+  );
 
   // prevent adding a '„' character and instead close the editor
   // when using the Notes keyboard shortcut within the editor
