@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Sidebar Notes",
   "description": "Displays a sidebar that lets you take notes on web pages.",
-  "version": "4.4.0",
+  "version": "4.4.1",
   "default_locale": "en_US",
   "author": "chung1905",
   "browser_specific_settings": {
